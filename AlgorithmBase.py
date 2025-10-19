@@ -12,5 +12,5 @@ class AlgorithmBase(ABC):
     num_evaluations = 0
     
     @abstractmethod
-    def run():
+    def run(self):
         pass
