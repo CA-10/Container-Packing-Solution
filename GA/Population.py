@@ -1,11 +1,13 @@
 import random
 from Member import Member
 
-class GA:
+class Population:
 
-    def __init__(self, population_size, mutation_rate, container_width, container_height, num_circles):
+    def __init__(self, population_size, mutation_rate, container_width, container_height, num_circles, radii, masses):
         self.population = []
         self.fitnesses = []
+        self.radii = radii
+        self.masses = masses
         self.population_size = population_size
         self.mutation_rate = mutation_rate
         self.container_width = container_width
@@ -53,7 +55,13 @@ class GA:
         return new_genome
     
     def calculate_fitness(self):
-        pass #TODO
+        for member in self.population:
+            fitness = 0
+            fitness += member.calculate_overlap(self.radii)
+            
+            self.fitnesses.append(fitness)
+            
+            #TODO: Need to incorporate COM, container bounds, wasted space.
     
     #This implements roulette wheel selection.
     def select(self):
@@ -69,3 +77,8 @@ class GA:
             current += fitness
             if current >= pick:
                 return individual
+                
+p = Population(1000, 0.05, 100, 100, 3, [10, 20, 30, 40, 50], [])
+
+p.init_population()
+p.calculate_fitness()
