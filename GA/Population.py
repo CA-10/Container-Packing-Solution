@@ -13,7 +13,6 @@ class Population:
         self.container_width = container_width
         self.container_height = container_height
         self.num_circles = num_circles
-        self.gen = 0
     
     def init_population(self):
         for _ in range(self.population_size):
