@@ -5,6 +5,8 @@ class Member:
     
     def __init__(self, container_width, container_height, num_genes):
         self.genome = []
+        self.container_width = container_width
+        self.container_height = container_height
         
         #Randomly generate the Genome upon construction
         self.genome = [(random.randint(0, container_width), random.randint(0, container_height)) for _ in range(num_genes)]
@@ -27,3 +29,28 @@ class Member:
                     penalty += overlap ** 2 #Add a squared penalty as we want to HEAVILY discourage overlapping.
         
         return overlap
+    
+    #TODO TEST!
+    def calculate_bounds_overlap(self, radii):
+        penalty = 0
+        
+        #For each circle, check if the circle is outside the bounds of the container
+        for i in range(len(self.genome) - 1):
+            x, y = self.genome[i]
+            r = radii[i]
+            
+            #Calculate the distance between the center and the container points and add penalty based on distance
+            if x - r < 0:
+                penalty += abs(x - r)
+            
+            if x + r > self.container_width:
+                penalty += abs(x + r - width)
+            
+            if y - r < 0:
+                penalty += abs(y - r)
+                
+            if y + r > height:
+                penalty += abs(y + r - height)
+        
+        return penalty
+        
