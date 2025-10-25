@@ -15,8 +15,8 @@ class Member:
         penalty = 0
     
         #For each circle, loop over each circle again apart from current and calculate overlap between all circles.
-        for i in range(len(self.genome) - 1):
-            for j in range(i + 1, len(self.genome) - 1):
+        for i in range(len(self.genome)):
+            for j in range(i + 1, len(self.genome)):
                 #Use the Euclidian distance formuala: d = sqrt((xi - xj)^2 + (yi - yj)^2)
                 dx = self.genome[i][0] - self.genome[j][0]
                 dy = self.genome[i][1] - self.genome[j][1]
@@ -28,14 +28,14 @@ class Member:
                 if overlap > 0:
                     penalty += overlap ** 2 #Add a squared penalty as we want to HEAVILY discourage overlapping.
         
-        return overlap
+        return penalty
     
     #TODO TEST!
     def calculate_bounds_overlap(self, radii):
         penalty = 0
         
         #For each circle, check if the circle is outside the bounds of the container
-        for i in range(len(self.genome) - 1):
+        for i in range(len(self.genome)):
             x, y = self.genome[i]
             r = radii[i]
             
@@ -44,13 +44,13 @@ class Member:
                 penalty += abs(x - r)
             
             if x + r > self.container_width:
-                penalty += abs(x + r - width)
+                penalty += abs(x + r - self.container_width)
             
             if y - r < 0:
                 penalty += abs(y - r)
                 
-            if y + r > height:
-                penalty += abs(y + r - height)
+            if y + r > self.container_height:
+                penalty += abs(y + r - self.container_height)
         
         return penalty
         
