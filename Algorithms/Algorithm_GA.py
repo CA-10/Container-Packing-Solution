@@ -2,6 +2,7 @@ from AlgorithmBase import AlgorithmBase as AB
 from GA.Population import Population
 import random
 from Visualisation.Custom_Visualisation import Custom_Visualisation
+import time
 
 class Algorithm_GA(AB):
     
@@ -18,6 +19,8 @@ class Algorithm_GA(AB):
         self.population = Population(population_size, mutation_rate, container_width, container_height, num_circles, radii, masses)
     
     def run(self):
+        start_time = time.time()
+        
         for gen in range(self.max_generations):
             self.run_generation()  
             max_fitness = self.population.calculate_fitness()
@@ -32,6 +35,10 @@ class Algorithm_GA(AB):
             #Found a perfect solution, stop early
             if max_fitness == 1.0:
                 break
+        
+        end_time = time.time()
+        self.runtime_seconds = end_time - start_time
+        self.fitness = self.population.calculate_fitness()
             
     def run_generation(self, show_pop_output=False):
         self.population.calculate_fitness()
@@ -54,9 +61,10 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(2000, 200, 0.01, 100, 100, 20, [random.randint(2, 10) for _ in range(20)], [30, 40, 50])
+a = Algorithm_GA(100, 200, 0.03, 100, 100, 20, [random.randint(2, 10) for _ in range(20)], [30, 40, 50])
 
 a.run()
+a.print_stats()
 
 c = Custom_Visualisation()
 c.visualise_best_member(a.population)
