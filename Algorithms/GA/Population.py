@@ -62,9 +62,9 @@ class Population:
         
         for member in self.population:
             penalty = 0
-            penalty += member.calculate_overlap(self.radii)
-            penalty += member.calculate_bounds_overlap(self.radii)
-            penalty += member.calculate_com_penalty(self.masses, [50, 50])[1]
+            penalty += member.calculate_overlap(self.radii) * 1.0
+            penalty += member.calculate_bounds_overlap(self.radii) * 1.0
+            penalty += member.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 5.0
 
             fitness = 1 / (1 + penalty)
             self.fitnesses.append(fitness)

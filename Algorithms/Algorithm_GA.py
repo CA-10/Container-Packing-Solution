@@ -33,8 +33,7 @@ class Algorithm_GA(AB):
             self.gen_count += 1
             self.num_iterations_or_generations += 1
             
-            #Found a perfect solution, stop early. The OR is added so that optional early breaks can be extended
-            if max_fitness == 1.0 or max_fitness > 0.99:
+            if max_fitness == 1.0:
                 break
         
         end_time = time.time()
@@ -53,6 +52,7 @@ class Algorithm_GA(AB):
             parent_b = self.population.select()
             
             child = self.population.crossover(parent_a, parent_b)
+            child_com = child.calculate_com_penalty(self.masses, [a.container_width / 2, a.container_height / 2])[0]
             child.genome = self.population.mutate(child.genome)
             
             temp_population.append(child)
@@ -64,7 +64,7 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(100, 200, 0.03, 100, 100, 20, [random.randint(2, 10) for _ in range(20)], [random.randint(2, 100) for _ in range(20)])
+a = Algorithm_GA(1000, 700, 0.06, 20, 15, 5, [2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300])
 
 a.run()
 
