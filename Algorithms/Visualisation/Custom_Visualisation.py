@@ -19,6 +19,10 @@ class Custom_Visualisation(Visualisation_Base):
             ax.add_patch(circle)
             ax.plot(x, y, 'ro', markersize=3)
 
+        #Draw center of mass (COM) of the container
+        com = best_member.calculate_com_penalty(population.masses, [population.container_width / 2, population.container_height / 2])[0]
+        plt.scatter(com[0], com[1], marker='x', color='red', s=100)
+
         #Plot formatting
         ax.set_xlim(-5, population.container_width + 5)
         ax.set_ylim(-5, population.container_height + 5)

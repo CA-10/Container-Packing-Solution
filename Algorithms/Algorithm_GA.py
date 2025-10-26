@@ -61,7 +61,7 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(100, 200, 0.03, 100, 100, 20, [random.randint(2, 10) for _ in range(20)], [30, 40, 50])
+a = Algorithm_GA(100, 200, 0.03, 100, 100, 5, [random.randint(2, 10) for _ in range(5)], [random.randint(2, 100) for _ in range(5)])
 
 a.run()
 a.print_stats()
