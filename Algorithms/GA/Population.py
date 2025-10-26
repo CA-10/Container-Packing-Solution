@@ -7,7 +7,6 @@ class Population:
     def __init__(self, population_size, mutation_rate, container_width, container_height, num_circles, radii, masses):
         self.population = []
         self.fitnesses = []
-        self.normalised_fitnesses = []
         self.radii = radii
         self.masses = masses
         self.population_size = population_size
@@ -60,7 +59,6 @@ class Population:
     
     def calculate_fitness(self):
         self.fitnesses = []
-        self.normalised_fitnesses = []
         
         for member in self.population:
             penalty = 0
@@ -74,15 +72,13 @@ class Population:
         
         min_fitness = min(self.fitnesses)
         max_fitness = max(self.fitnesses)
-        
-        self.normalised_fitnesses = self.fitnesses
 
         #Return the maximum normalised fitness
-        return max(self.normalised_fitnesses)
+        return max(self.fitnesses)
     
     #This implements roulette wheel selection.
     def select(self):
-        total_fitness = sum(self.normalised_fitnesses)
+        total_fitness = sum(self.fitnesses)
         
         if total_fitness == 0:
             return random.choice(self.population) #If all fitnesses are zero, pick randomly to avoid a crash.
@@ -90,9 +86,9 @@ class Population:
         pick = random.uniform(0, total_fitness)
         current = 0
         
-        for individual, fitness in zip(self.population, self.normalised_fitnesses):
+        for individual, fitness in zip(self.population, self.fitnesses):
             current += fitness
             if current >= pick:
                 return individual
         
-        return self.population[self.normalised_fitnesses.index(max(self.normalised_fitnesses))]
+        return self.population[self.fitnesses.index(max(self.fitnesses))]
