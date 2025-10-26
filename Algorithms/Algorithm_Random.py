@@ -63,7 +63,7 @@ class Algorithm_Random(AB):
         
         
 #====TODO Remove, this is just testing code.====
-a = Algorithm_Random([random.randint(2, 10) for _ in range(5)], [random.randint(2, 100) for _ in range(5)], 100, 100, 5, 1000)
+a = Algorithm_Random([random.randint(2, 10) for _ in range(20)], [random.randint(2, 100) for _ in range(20)], 100, 100, 20, 1000)
 
 a.run()
 
