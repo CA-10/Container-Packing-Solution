@@ -2,6 +2,7 @@ from AlgorithmBase import AlgorithmBase as AB
 from GA.Population import Population
 import random
 from Visualisation.Custom_Visualisation import Custom_Visualisation
+from Visualisation.Visualisation_Object import Visualisation_Object
 import time
 
 class Algorithm_GA(AB):
@@ -27,18 +28,20 @@ class Algorithm_GA(AB):
             
             print(f"Generation: {gen}")
             print(f"Best Fitness: {max_fitness}")
-            print(f"Average Fitness: {sum(self.population.normalised_fitnesses) / len(self.population.normalised_fitnesses)}")
+            print(f"Average Fitness: {sum(self.population.fitnesses) / len(self.population.fitnesses)}")
             
             self.gen_count += 1
             self.num_iterations_or_generations += 1
             
-            #Found a perfect solution, stop early
-            if max_fitness == 1.0:
+            #Found a perfect solution, stop early. The OR is added so that optional early breaks can be extended
+            if max_fitness == 1.0 or max_fitness > 0.99:
                 break
         
         end_time = time.time()
         self.runtime_seconds = end_time - start_time
         self.fitness = self.population.calculate_fitness()
+        
+        self.print_stats()
             
     def run_generation(self, show_pop_output=False):
         self.population.calculate_fitness()
@@ -61,10 +64,15 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(100, 200, 0.03, 100, 100, 5, [random.randint(2, 10) for _ in range(5)], [random.randint(2, 100) for _ in range(5)])
+a = Algorithm_GA(100, 200, 0.03, 100, 100, 20, [random.randint(2, 10) for _ in range(20)], [random.randint(2, 100) for _ in range(20)])
 
 a.run()
-a.print_stats()
+
+
+best_member = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))]
+
+com = best_member.calculate_com_penalty(a.masses, [a.container_width / 2, a.container_height / 2])[0]
+cb = Visualisation_Object(best_member.genome, a.radii, a.masses, com, a.container_width, a.container_height)
 
 c = Custom_Visualisation()
-c.visualise_best_member(a.population)
+c.visualise(cb)
