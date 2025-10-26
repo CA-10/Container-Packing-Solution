@@ -30,7 +30,6 @@ class Member:
         
         return penalty
     
-    #TODO TEST!
     def calculate_bounds_overlap(self, radii):
         penalty = 0
         
@@ -54,3 +53,28 @@ class Member:
         
         return penalty
         
+    def calculate_com_penalty(self, masses, safety_zone_center):
+        penalty = 0
+        com = [0, 0]
+        sum_mx = 0
+        sum_my = 0
+        total_mass = sum(masses)
+        
+        for i in range(len(self.genome)):
+            circle = self.genome[i]
+            circle_x = circle[0]
+            circle_y = circle[1]
+            circle_mass = masses[i]
+            
+            sum_mx += circle_x * circle_mass
+            sum_my += circle_y * circle_mass
+        
+        com[0] = sum_mx / total_mass
+        com[1] = sum_my / total_mass
+        
+        dist_from_center = math.sqrt((com[0] - safety_zone_center[0])**2 + (com[1] - safety_zone_center[1])**2)
+        
+        if dist_from_center > 0:
+            penalty += dist_from_center ** 2
+        
+        return com, penalty
