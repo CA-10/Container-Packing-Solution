@@ -78,8 +78,8 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(150, 700, 0.07, 20, 15, 5, [2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300], "tournament")
-#a = Algorithm_GA(150, 700, 0.06, 100, 100, 20, [random.randint(1, 10) for _ in range(20)], [random.randint(100, 2500) for _ in range(20)])
+a = Algorithm_GA(300, 600, 0.03, 20, 15, 10, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500], "tournament", 5)
+#a = Algorithm_GA(300, 700, 0.03, 100, 100, 10, [random.randint(3.0, 10.0) for _ in range(10)], [random.randint(100, 2500) for _ in range(10)])
 
 
 

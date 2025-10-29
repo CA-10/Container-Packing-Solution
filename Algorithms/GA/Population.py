@@ -30,16 +30,37 @@ class Population:
         result += "]"
         
         return result
-    
-    def crossover(self, parent_A, parent_B):
-        #Choose a random crossover point (not at the ends)
-        random_point = random.randint(1, len(parent_A.genome) - 1)
+        
+    def crossover(self, parent_A, parent_B, alpha=0.5):
+        """
+        Perform a blended crossover (BLX-α) for genomes made of (x, y) tuples.
+        Each coordinate is blended separately.
+        """
+        child1_genome = []
+        child2_genome = []
 
-        #Create child genomes by swapping tails
-        child1_genome = parent_A.genome[:random_point] + parent_B.genome[random_point:]
-        child2_genome = parent_B.genome[:random_point] + parent_A.genome[random_point:]
+        for (xA, yA), (xB, yB) in zip(parent_A.genome, parent_B.genome):
+            # --- Blend X coordinate ---
+            x_min, x_max = min(xA, xB), max(xA, xB)
+            x_diff = x_max - x_min
+            x_lower = x_min - alpha * x_diff
+            x_upper = x_max + alpha * x_diff
+            new_x1 = random.uniform(x_lower, x_upper)
+            new_x2 = random.uniform(x_lower, x_upper)
 
-        #Create child Member objects
+            # --- Blend Y coordinate ---
+            y_min, y_max = min(yA, yB), max(yA, yB)
+            y_diff = y_max - y_min
+            y_lower = y_min - alpha * y_diff
+            y_upper = y_max + alpha * y_diff
+            new_y1 = random.uniform(y_lower, y_upper)
+            new_y2 = random.uniform(y_lower, y_upper)
+
+            # Add blended genes as tuples
+            child1_genome.append((new_x1, new_y1))
+            child2_genome.append((new_x2, new_y2))
+
+        # Create child Member objects
         child1 = Member(self.container_width, self.container_height, self.num_circles)
         child2 = Member(self.container_width, self.container_height, self.num_circles)
 
@@ -70,14 +91,13 @@ class Population:
         
         for member in self.population:
             penalty = 0
-            penalty += member.calculate_overlap(self.radii) * 3.0
+            penalty += member.calculate_overlap(self.radii) * 1.3
             penalty += member.calculate_bounds_overlap(self.radii) * 1.0
             penalty += member.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
-            penalty += member.calculate_boundary_waste(self.radii) * 0.6
+            penalty += member.calculate_touching_penalty(self.radii) * 1.0
 
             fitness = 1 / (1 + penalty)
             self.fitnesses.append(fitness)
-            #TODO: Need to incorporate COM, container bounds, wasted space.
         
         min_fitness = min(self.fitnesses)
         max_fitness = max(self.fitnesses)

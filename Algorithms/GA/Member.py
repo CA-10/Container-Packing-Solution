@@ -30,17 +30,23 @@ class Member:
         
         return penalty
         
-    def calculate_boundary_waste(self, radii):
+    def calculate_touching_penalty(self, radii, desired_distance_factor=2.4):
+        #Penalize circles which are not touching their neighbours. This will help reduce wasted space.
         penalty = 0
         
-        for (x, y), r in zip(self.genome, radii):
-            #Distance from edges. Penalize circles that are too far from the center to get tight packing
-            dx = abs(x - self.container_width / 2)
-            dy = abs(y - self.container_height / 2)
-            dist_from_center = math.sqrt(dx**2 + dy**2)
-            penalty += (dist_from_center / (self.container_width / 2)) ** 2
-            
-        return penalty / len(self.genome)
+        for i in range(len(self.genome)):
+            for j in range(i + 1, len(self.genome)):
+                dx = self.genome[i][0] - self.genome[j][0]
+                dy = self.genome[i][1] - self.genome[j][1]
+                dist = math.sqrt(dx**2 + dy**2)
+                
+                desired_distance = (radii[i] + radii[j]) * desired_distance_factor
+                
+                #Only penalize if circles are too far apart (don't interfere with overlaps)
+                if dist > desired_distance:
+                    penalty += (dist - desired_distance) ** 2
+                    
+        return penalty
 
     def calculate_bounds_overlap(self, radii):
         penalty = 0
