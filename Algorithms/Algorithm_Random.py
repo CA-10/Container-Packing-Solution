@@ -30,6 +30,7 @@ class Algorithm_Random(AB):
         penalty += self.current.calculate_overlap(self.radii)
         penalty += self.current.calculate_bounds_overlap(self.radii)
         penalty += self.current.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1]
+        penalty += self.current.calculate_touching_penalty(self.radii) * 1.0
 
         fitness = 1 / (1 + penalty)
         
