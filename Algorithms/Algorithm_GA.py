@@ -1,13 +1,14 @@
 from AlgorithmBase import AlgorithmBase as AB
 from GA.Population import Population
 import random
-from Visualisation.Custom_Visualisation import Custom_Visualisation
-from Visualisation.Visualisation_Object import Visualisation_Object
+from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
+from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
+import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import time
 
 class Algorithm_GA(AB):
     
-    def __init__(self, max_generations, population_size, mutation_rate, container_width, container_height, num_circles, radii, masses):
+    def __init__(self, max_generations, population_size, mutation_rate, container_width, container_height, num_circles, radii, masses, selection_method="roulette", tournament_size=3):
         self.gen_count = 0
         self.max_generations = max_generations
         self.population_size = population_size
@@ -15,6 +16,9 @@ class Algorithm_GA(AB):
         self.container_height = container_height
         self.radii = radii
         self.masses = masses
+        self.best_fitnesses = []
+        self.selection_method = selection_method
+        self.tournament_size = tournament_size
         
         #Create the population object and assign to self.population
         self.population = Population(population_size, mutation_rate, container_width, container_height, num_circles, radii, masses)
@@ -25,6 +29,7 @@ class Algorithm_GA(AB):
         for gen in range(self.max_generations):
             self.run_generation()  
             max_fitness = self.population.calculate_fitness()
+            self.best_fitnesses.append(max_fitness)
             
             print(f"Generation: {gen}")
             print(f"Best Fitness: {max_fitness}")
@@ -47,16 +52,25 @@ class Algorithm_GA(AB):
         
         temp_population = []
         
-        for _ in range(self.population_size):
-            parent_a = self.population.select()
-            parent_b = self.population.select()
-            
-            child = self.population.crossover(parent_a, parent_b)
-            child_com = child.calculate_com_penalty(self.masses, [a.container_width / 2, a.container_height / 2])[0]
-            child.genome = self.population.mutate(child.genome)
-            
-            temp_population.append(child)
-        
+        while len(temp_population) < self.population_size:
+            if self.selection_method == "roulette":
+                parent_a = self.population.roulette_wheel_selection()
+                parent_b = self.population.roulette_wheel_selection()
+            elif self.selection_method == "tournament":
+                parent_a = self.population.tournament_selection(self.tournament_size)
+                parent_b = self.population.tournament_selection(self.tournament_size)
+            else:
+                raise Exception(f"{self.selection_method} not a valid selection method")
+
+            child1, child2 = self.population.crossover(parent_a, parent_b)
+
+            for child in (child1, child2):
+                child_com = child.calculate_com_penalty(self.masses, [a.container_width / 2, a.container_height / 2])[0]
+                child.genome = self.population.mutate(child.genome)
+                temp_population.append(child)
+
+            temp_population = temp_population[:self.population_size]
+
         self.population.population = temp_population
 
         #Print out the new population if the flag is enabled
@@ -64,7 +78,10 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(1000, 700, 0.06, 20, 15, 5, [2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300])
+a = Algorithm_GA(150, 700, 0.07, 20, 15, 5, [2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300], "tournament")
+#a = Algorithm_GA(150, 700, 0.06, 100, 100, 20, [random.randint(1, 10) for _ in range(20)], [random.randint(100, 2500) for _ in range(20)])
+
+
 
 a.run()
 
@@ -76,3 +93,5 @@ cb = Visualisation_Object(best_member.genome, a.radii, a.masses, com, a.containe
 
 c = Custom_Visualisation()
 c.visualise(cb)
+
+Results_Graphs.draw_fitness_over_gens(a.best_fitnesses)
