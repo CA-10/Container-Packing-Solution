@@ -32,14 +32,22 @@ class Population:
         return result
     
     def crossover(self, parent_A, parent_B):
+        #Choose a random crossover point (not at the ends)
         random_point = random.randint(1, len(parent_A.genome) - 1)
-        
-        child_genome = parent_A.genome[:random_point] + parent_B.genome[random_point:]
-        child = Member(self.container_width, self.container_height, self.num_circles)
-        child.genome = child_genome
 
-        return child
-    
+        #Create child genomes by swapping tails
+        child1_genome = parent_A.genome[:random_point] + parent_B.genome[random_point:]
+        child2_genome = parent_B.genome[:random_point] + parent_A.genome[random_point:]
+
+        #Create child Member objects
+        child1 = Member(self.container_width, self.container_height, self.num_circles)
+        child2 = Member(self.container_width, self.container_height, self.num_circles)
+
+        child1.genome = child1_genome
+        child2.genome = child2_genome
+
+        return child1, child2
+  
     def mutate(self, genome):
         new_genome = []
         
@@ -65,6 +73,7 @@ class Population:
             penalty += member.calculate_overlap(self.radii) * 3.0
             penalty += member.calculate_bounds_overlap(self.radii) * 1.0
             penalty += member.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
+            penalty += member.calculate_boundary_waste(self.radii) * 0.6
 
             fitness = 1 / (1 + penalty)
             self.fitnesses.append(fitness)
@@ -76,8 +85,7 @@ class Population:
         #Return the maximum normalised fitness
         return max(self.fitnesses)
     
-    #This implements roulette wheel selection.
-    def select(self):
+    def roulette_wheel_selection(self):
         total_fitness = sum(self.fitnesses)
         
         if total_fitness == 0:
@@ -92,3 +100,9 @@ class Population:
                 return individual
         
         return self.population[self.fitnesses.index(max(self.fitnesses))]
+    
+    def tournament_selection(self, tournament_size=3):
+        participants = random.sample(list(zip(self.population, self.fitnesses)), tournament_size)
+        winner = max(participants, key=lambda x: x[1])
+        
+        return winner[0]

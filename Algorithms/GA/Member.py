@@ -29,7 +29,19 @@ class Member:
                     penalty += overlap ** 2 #Add a squared penalty as we want to HEAVILY discourage overlapping.
         
         return penalty
-    
+        
+    def calculate_boundary_waste(self, radii):
+        penalty = 0
+        
+        for (x, y), r in zip(self.genome, radii):
+            #Distance from edges. Penalize circles that are too far from the center to get tight packing
+            dx = abs(x - self.container_width / 2)
+            dy = abs(y - self.container_height / 2)
+            dist_from_center = math.sqrt(dx**2 + dy**2)
+            penalty += (dist_from_center / (self.container_width / 2)) ** 2
+            
+        return penalty / len(self.genome)
+
     def calculate_bounds_overlap(self, radii):
         penalty = 0
         
