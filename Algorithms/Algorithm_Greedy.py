@@ -4,6 +4,7 @@ from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
 from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
 import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import random
+from GA.Member import Member
 
 class Algorithm_Greedy(AB):
 
@@ -124,10 +125,33 @@ class Algorithm_Greedy(AB):
         
         return com
         
+    def calculate_fitness(self):
+        #Convert the circles into a Member to use the class's built in fitness methods.
+        positions = []
+        radii = []
+        
+        for (x, y, r) in self.placed_circles:
+            positions.append((x, y))
+            radii.append(r)
+        
+        member = Member(self.container_width, self.container_height, len(positions))
+        member.genome = positions
+        
+        penalty = 0
+        penalty += member.calculate_overlap(radii) * 1.3
+        penalty += member.calculate_bounds_overlap(radii) * 1.0
+        penalty += member.calculate_com_penalty(self.placed_masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
+        penalty += member.calculate_touching_penalty(radii) * 1.0
+
+        fitness = 1 / (1 + penalty)
+        
+        return fitness
+        
     def dist(self, p1, p2):
         return math.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
 
-a = Algorithm_Greedy(20, 15, 7, [2.0, 2.0, 1.5, 1.5, 1.2, 1.5, 1.2], [2500, 2500, 800, 800, 300, 800, 300])
+a = Algorithm_Greedy(20, 15, 10, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500])
+#a = Algorithm_Greedy(200, 200, 200, [random.randint(2.0, 10) for _ in range(200)], [random.randint(100, 2500) for _ in range(200)])
 a.run()
 
 print(a.placed_circles)
@@ -139,6 +163,8 @@ for i in a.placed_circles:
 
 com = a.calculate_com()
 cb = Visualisation_Object(pos, a.radii, a.masses, com, a.container_width, a.container_height)
+
+print(a.calculate_fitness())
 
 c = Custom_Visualisation()
 c.visualise(cb)
