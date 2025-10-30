@@ -27,9 +27,9 @@ class Algorithm_Random(AB):
             return
         
         penalty = 0
-        penalty += self.current.calculate_overlap(self.radii)
-        penalty += self.current.calculate_bounds_overlap(self.radii)
-        penalty += self.current.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1]
+        penalty += self.current.calculate_overlap(self.radii) * 1.3
+        penalty += self.current.calculate_bounds_overlap(self.radii) * 1.0
+        penalty += self.current.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
         penalty += self.current.calculate_touching_penalty(self.radii) * 1.0
 
         fitness = 1 / (1 + penalty)
@@ -64,7 +64,7 @@ class Algorithm_Random(AB):
         
         
 #====TODO Remove, this is just testing code.====
-a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300], 20, 15, 5, 5000)
+a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300], 20, 15, 5, 10000)
 
 a.run()
 
