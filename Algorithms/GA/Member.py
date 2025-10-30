@@ -4,7 +4,6 @@ import math
 class Member:
     
     def __init__(self, container_width, container_height, num_genes):
-        self.genome = []
         self.container_width = container_width
         self.container_height = container_height
         
