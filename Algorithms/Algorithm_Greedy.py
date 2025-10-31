@@ -28,24 +28,28 @@ class Algorithm_Greedy(AB):
             valid_candidates_stage2 = []
             
             potential_com_distances = []
+            potential_wasted_space_penalties = []
             
             for candidate in valid_candidates_stage1:
                 potential_com = self.calculate_potential_com(candidate, m)
                 dist = self.dist(potential_com, (self.container_width / 2, self.container_height / 2))
                 potential_com_distances.append(dist)
+                potential_wasted_space_penalties.append(self.calculate_touching_penalty(candidate, r))
             
             #Sort the candidates by their distance from COM. Add the candidate with the lowest distance
             potential_com_distances, valid_candidates_stage1 = zip(*sorted(zip(potential_com_distances, valid_candidates_stage1), reverse=False))
             valid_candidates_stage2.append(valid_candidates_stage1[0])
+            
+            #Now sort the candidates by the wasted space.
+            potential_wasted_space_penalties, valid_candidates_stage2 = zip(*sorted(zip(potential_wasted_space_penalties, valid_candidates_stage2), reverse=False))
 
             if valid_candidates_stage2:
                 #Pick random valid candidate so that solution is not always the same
-                best_position = random.choice(valid_candidates_stage2)
+                best_position = valid_candidates_stage2[0]
                 self.placed_circles.append((best_position[0], best_position[1], r))
                 self.placed_masses.append(m)
             else:
                 print(f"No valid placement found for radius {r}")
-
 
     def generate_candidate_positions(self, circle_r):
         candidate_positions = []
@@ -55,7 +59,7 @@ class Algorithm_Greedy(AB):
             candidate_positions.append((self.container_width / 2, self.container_height / 2))
         else:
             for (x, y, r) in self.placed_circles:
-                for angle in self.linspace(0, 2 * math.pi, 36):
+                for angle in self.linspace(0, 2 * math.pi, 50):
                     new_x = x + (circle_r + r) * math.cos(angle)
                     new_y = y + (circle_r + r) * math.sin(angle)
                     
@@ -124,7 +128,24 @@ class Algorithm_Greedy(AB):
         com[1] = sum_my / total_mass
         
         return com
+    
+    def calculate_touching_penalty(self, new_circle, new_circle_r, desired_distance_factor=2.4):
+        #Penalize circles which are not touching their neighbours. This will help reduce wasted space.
+        penalty = 0
         
+        for i in range(len(self.placed_circles)):
+            dx = self.placed_circles[i][0] - new_circle[0]
+            dy = self.placed_circles[i][1] - new_circle[1]
+            dist = math.sqrt(dx**2 + dy**2)
+            
+            desired_distance = (self.radii[i] + new_circle_r) * desired_distance_factor
+            
+            #Only penalize if circles are too far apart (don't interfere with overlaps)
+            if dist > desired_distance:
+                penalty += (dist - desired_distance) ** 2
+                    
+        return penalty
+    
     def calculate_fitness(self):
         #Convert the circles into a Member to use the class's built in fitness methods.
         positions = []
