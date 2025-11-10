@@ -1,10 +1,10 @@
 from AlgorithmBase import AlgorithmBase as AB
 from GA.Population import Population
-import random
 from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
 from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
 import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import time
+from Operators.penalty_functions import *
 
 class Algorithm_GA(AB):
     
@@ -65,7 +65,7 @@ class Algorithm_GA(AB):
             child1, child2 = self.population.crossover(parent_a, parent_b)
 
             for child in (child1, child2):
-                child_com = child.calculate_com_penalty(self.masses, [a.container_width / 2, a.container_height / 2])[0]
+                child_com = calculate_com_penalty(child.genome, self.masses, [a.container_width / 2, a.container_height / 2])[0]
                 child.genome = self.population.mutate(child.genome)
                 temp_population.append(child)
 
@@ -88,7 +88,7 @@ a.run()
 
 best_member = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))]
 
-com = best_member.calculate_com_penalty(a.masses, [a.container_width / 2, a.container_height / 2])[0]
+com = calculate_com_penalty(best_member.genome, a.masses, [a.container_width / 2, a.container_height / 2])[0]
 cb = Visualisation_Object(best_member.genome, a.radii, a.masses, com, a.container_width, a.container_height)
 
 c = Custom_Visualisation()

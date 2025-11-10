@@ -3,8 +3,7 @@ import math
 from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
 from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
 import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
-import random
-from GA.Member import Member
+from Operators.penalty_functions import *
 
 class Algorithm_Greedy(AB):
 
@@ -154,15 +153,12 @@ class Algorithm_Greedy(AB):
         for (x, y, r) in self.placed_circles:
             positions.append((x, y))
             radii.append(r)
-        
-        member = Member(self.container_width, self.container_height, len(positions))
-        member.genome = positions
-        
+                
         penalty = 0
-        penalty += member.calculate_overlap(radii) * 1.3
-        penalty += member.calculate_bounds_overlap(radii) * 1.0
-        penalty += member.calculate_com_penalty(self.placed_masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
-        penalty += member.calculate_touching_penalty(radii) * 1.0
+        penalty += calculate_overlap_penalty(positions, radii) * 1.3
+        penalty += calculate_bounds_overlap_penalty(positions, radii, self.container_width, self.container_height) * 1.0
+        penalty += calculate_com_penalty(positions, self.placed_masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
+        penalty += calculate_touching_penalty(positions, radii) * 1.0
 
         fitness = 1 / (1 + penalty)
         
