@@ -1,6 +1,7 @@
 import random
 import math
 from GA.Member import Member
+from Operators.penalty_functions import *
 
 class Population:
 
@@ -91,10 +92,10 @@ class Population:
         
         for member in self.population:
             penalty = 0
-            penalty += member.calculate_overlap(self.radii) * 1.3
-            penalty += member.calculate_bounds_overlap(self.radii) * 1.0
-            penalty += member.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
-            penalty += member.calculate_touching_penalty(self.radii) * 1.0
+            penalty += calculate_overlap_penalty(member.genome, self.radii) * 1.3
+            penalty += calculate_bounds_overlap_penalty(member.genome, self.radii, self.container_width, self.container_height) * 1.0
+            penalty += calculate_com_penalty(member.genome, self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
+            penalty += calculate_touching_penalty(member.genome, self.radii) * 1.0
 
             fitness = 1 / (1 + penalty)
             self.fitnesses.append(fitness)
