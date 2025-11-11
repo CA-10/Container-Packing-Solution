@@ -1,11 +1,15 @@
 import random
-import math
+from abc import ABC, abstractmethod
 
-class Member:
+class Member(ABC):
     
     def __init__(self, container_width, container_height, num_genes):
         self.container_width = container_width
         self.container_height = container_height
+        self.num_genes = num_genes
         
-        #Randomly generate the Genome upon construction
-        self.genome = [(random.randint(0, container_width), random.randint(0, container_height)) for _ in range(num_genes)]
+        self.init_genome()
+
+    @abstractmethod
+    def init_genome(self):
+        pass

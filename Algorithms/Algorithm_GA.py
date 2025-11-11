@@ -1,5 +1,5 @@
 from AlgorithmBase import AlgorithmBase as AB
-from GA.Population import Population
+from GA.Population_Cartesian import Population_Cartesian
 from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
 from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
 import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
@@ -21,7 +21,7 @@ class Algorithm_GA(AB):
         self.tournament_size = tournament_size
         
         #Create the population object and assign to self.population
-        self.population = Population(population_size, mutation_rate, container_width, container_height, num_circles, radii, masses)
+        self.population = Population_Cartesian(population_size, mutation_rate, container_width, container_height, num_circles, radii, masses)
     
     def run(self):
         start_time = time.time()
