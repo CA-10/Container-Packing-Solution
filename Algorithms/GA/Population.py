@@ -2,6 +2,7 @@ import random
 import math
 from GA.Member import Member
 from Operators.penalty_functions import *
+from Operators.crossover import *
 
 class Population:
 
@@ -33,42 +34,15 @@ class Population:
         return result
         
     def crossover(self, parent_A, parent_B, alpha=0.5):
-        """
-        Perform a blended crossover (BLX-α) for genomes made of (x, y) tuples.
-        Each coordinate is blended separately.
-        """
-        child1_genome = []
-        child2_genome = []
+        child1, child2 = blended_crossover(parent_A, parent_B, alpha)
 
-        for (xA, yA), (xB, yB) in zip(parent_A.genome, parent_B.genome):
-            # --- Blend X coordinate ---
-            x_min, x_max = min(xA, xB), max(xA, xB)
-            x_diff = x_max - x_min
-            x_lower = x_min - alpha * x_diff
-            x_upper = x_max + alpha * x_diff
-            new_x1 = random.uniform(x_lower, x_upper)
-            new_x2 = random.uniform(x_lower, x_upper)
+        child1_member = Member(self.container_width, self.container_height, self.num_circles)
+        child1_member.genome = child1
 
-            # --- Blend Y coordinate ---
-            y_min, y_max = min(yA, yB), max(yA, yB)
-            y_diff = y_max - y_min
-            y_lower = y_min - alpha * y_diff
-            y_upper = y_max + alpha * y_diff
-            new_y1 = random.uniform(y_lower, y_upper)
-            new_y2 = random.uniform(y_lower, y_upper)
+        child2_member = Member(self.container_width, self.container_height, self.num_circles)
+        child2_member.genome = child2
 
-            # Add blended genes as tuples
-            child1_genome.append((new_x1, new_y1))
-            child2_genome.append((new_x2, new_y2))
-
-        # Create child Member objects
-        child1 = Member(self.container_width, self.container_height, self.num_circles)
-        child2 = Member(self.container_width, self.container_height, self.num_circles)
-
-        child1.genome = child1_genome
-        child2.genome = child2_genome
-
-        return child1, child2
+        return child1_member, child2_member
   
     def mutate(self, genome):
         new_genome = []

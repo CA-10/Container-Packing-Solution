@@ -62,7 +62,7 @@ class Algorithm_GA(AB):
             else:
                 raise Exception(f"{self.selection_method} not a valid selection method")
 
-            child1, child2 = self.population.crossover(parent_a, parent_b)
+            child1, child2 = self.population.crossover(parent_a.genome, parent_b.genome)
 
             for child in (child1, child2):
                 child_com = calculate_com_penalty(child.genome, self.masses, [a.container_width / 2, a.container_height / 2])[0]
