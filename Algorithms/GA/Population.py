@@ -3,6 +3,7 @@ import math
 from GA.Member import Member
 from Operators.penalty_functions import *
 from Operators.crossover import *
+from Operators.mutation import *
 
 class Population:
 
@@ -45,20 +46,7 @@ class Population:
         return child1_member, child2_member
   
     def mutate(self, genome):
-        new_genome = []
-        
-        for gene in genome:
-            probability = random.random()
-            
-            if probability < self.mutation_rate:
-                #TODO: More complex genome mutations, possibly using COM aware methods.  
-                new_x = gene[0] + random.randint(-20, 20)
-                new_y = gene[1] + random.randint(-20, 20)
-                
-                new_genome.append((new_x, new_y))
-            else:
-                new_genome.append(gene)
-        
+        new_genome = cartesian_mutation(genome, self.mutation_rate)
         return new_genome
     
     def calculate_fitness(self):
