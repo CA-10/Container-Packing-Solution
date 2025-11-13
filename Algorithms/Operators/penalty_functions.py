@@ -33,7 +33,23 @@ def calculate_touching_penalty(positions, radii, desired_distance_factor=2.4):
             
             #Only penalize if circles are too far apart (don't interfere with overlaps)
             if dist > desired_distance:
-                penalty += (dist - desired_distance) ** 2
+                penalty += (dist - desired_distance)
+                
+    return penalty
+
+def calculate_touching_penalty_single_circle(placed_circles, new_circle, new_circle_r, desired_distance_factor=2.4):
+    penalty = 0
+    
+    for i in range(len(placed_circles)):
+        dx = placed_circles[i][0] - new_circle[0]
+        dy = placed_circles[i][1] - new_circle[1]
+        dist = math.sqrt(dx**2 + dy**2)
+        
+        placed_circle_r = placed_circles[i][2]
+        desired_distance = (placed_circle_r + new_circle_r) * desired_distance_factor
+        
+        if dist > desired_distance:
+            penalty += (dist - desired_distance)
                 
     return penalty
 
@@ -85,3 +101,42 @@ def calculate_com_penalty(positions, masses, safety_zone_center):
         penalty += dist_from_center ** 2
     
     return com, penalty
+
+def calculate_bounding_box_wasted_space(positions, radii):
+    # Determine the bounding box edges
+    min_x = min(x - r for (x, y), r in zip(positions, radii))
+    max_x = max(x + r for (x, y), r in zip(positions, radii))
+    min_y = min(y - r for (x, y), r in zip(positions, radii))
+    max_y = max(y + r for (x, y), r in zip(positions, radii))
+
+    # Bounding box area
+    bounding_box_area = (max_x - min_x) * (max_y - min_y)
+
+    # Total area of all circles
+    circle_area = sum(math.pi * r**2 for r in radii)
+
+    # Wasted space is the difference
+    wasted_space = (bounding_box_area - circle_area)
+
+    # Optional: normalize
+    normalized_wasted_space = (wasted_space / bounding_box_area)
+    
+    return normalized_wasted_space  # Lower is better
+
+def calculate_packing_fitness(positions, radii):
+    total_area = sum(r ** 2 for r in radii)
+    cx = sum(x * r ** 2 for (x, y), r in zip(positions, radii)) / total_area
+    cy = sum(y * r ** 2 for (x, y), r in zip(positions, radii)) / total_area
+
+    # Average squared distance from centroid (spread)
+    spread = sum(((x - cx) ** 2 + (y - cy) ** 2) for (x, y) in positions) / len(positions)
+    
+    return spread  # lower is better
+
+def calculate_total_penalty(positions, radii, masses, container_width, container_height):
+    p1 = calculate_overlap_penalty(positions, radii)
+    p2 = calculate_bounds_overlap_penalty(positions, radii, container_width, container_height)
+    p3 = calculate_com_penalty(positions, masses, [container_width / 2, container_height / 2])[1]
+    p4 = calculate_packing_fitness(positions, radii)
+
+    return (10.0 * p1) + (1.0 * p2) + (1.0 * p3) + (1.6 * p4)
