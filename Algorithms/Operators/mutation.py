@@ -17,12 +17,21 @@ def cartesian_mutation(genome, mutation_rate):
     return new_genome
 
 def swap_mutation(genome, mutation_rate):
+    for i in range(len(genome)):
+        probability = random.random()
+
+        if probability < mutation_rate:
+            point1 = random.randint(0, len(genome) - 1)
+            point2 = random.randint(0, len(genome) - 1)
+
+            genome[point1], genome[point2] = genome[point2], genome[point1]
+        
+    return genome
+
+def shuffle_mutation(genome, mutation_rate):
     probability = random.random()
 
     if probability < mutation_rate:
-        point1 = random.randint(len(genome) - 1)
-        point2 = random.randint(len(genome) - 1)
-
-        genome[point1], genome[point2] = genome[point2], genome[point1]
+        genome = random.sample(genome, len(genome))
     
     return genome

@@ -42,17 +42,13 @@ class Population_Cartesian(Population):
         self.fitnesses = []
         
         for member in self.population:
-            penalty = 0
-            penalty += calculate_overlap_penalty(member.genome, self.radii) * 1.3
-            penalty += calculate_bounds_overlap_penalty(member.genome, self.radii, self.container_width, self.container_height) * 1.0
-            penalty += calculate_com_penalty(member.genome, self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
-            penalty += calculate_touching_penalty(member.genome, self.radii) * 1.0
+            penalty = calculate_total_penalty(member.genome, self.radii, self.masses, self.container_width, self.container_height)
 
-            fitness = 1 / (1 + penalty)
+            fitness = math.exp(-0.001 * penalty)
             self.fitnesses.append(fitness)
         
         return max(self.fitnesses)
-    
+        
     def roulette_wheel_selection(self):
         return super().roulette_wheel_selection()
     

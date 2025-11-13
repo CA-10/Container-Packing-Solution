@@ -1,0 +1,96 @@
+import math
+from Operators.penalty_functions import *
+
+def generate_candidate_positions(placed_circles, circle_r, container_width, container_height):
+    candidate_positions = []
+
+    #If haven't placed any circles yet, place the circle at the center of the container
+    if not placed_circles:
+        candidate_positions.append((container_width / 2, container_height / 2))
+    else:
+        #Generate candidate positions around existing circles
+        for (x, y, r) in placed_circles:
+            for angle in linspace(0, 2 * math.pi, 50):
+                new_x = x + (circle_r + r) * math.cos(angle)
+                new_y = y + (circle_r + r) * math.sin(angle)
+                
+                if (circle_r <= new_x <= container_width - circle_r and
+                    circle_r <= new_y <= container_height - circle_r):
+                    candidate_positions.append((new_x, new_y))
+                        
+    return candidate_positions
+
+def calc_dist(p1, p2):
+    return math.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
+
+def linspace(start, stop, num):
+    if num == 1:
+        return [start]
+    
+    step = (stop - start) / (num - 1)
+    return [start + i * step for i in range(num)]
+
+def does_overlap(placed_circles, circle_position, circle_r):
+    for (x, y, r) in placed_circles:
+        dx = circle_position[0] - x
+        dy = circle_position[1] - y
+        dist = math.sqrt(dx**2 + dy**2)
+        
+        if dist < (r + circle_r):
+            return True
+            
+    return False
+
+def calculate_potential_com(placed_circles, placed_masses, new_circle, m):
+    com = [0, 0]
+    sum_mx = 0
+    sum_my = 0
+    total_mass = sum(placed_masses) + m
+    
+    for i in range(len(placed_masses)):
+        circle_x = placed_circles[i][0]
+        circle_y = placed_circles[i][1]
+        circle_mass = placed_masses[i]
+        
+        sum_mx += circle_x * circle_mass
+        sum_my += circle_y * circle_mass
+    
+    sum_mx += new_circle[0] * m
+    sum_my += new_circle[1] * m
+
+    com[0] = sum_mx / total_mass
+    com[1] = sum_my / total_mass
+    
+    return com
+
+def place_circles(radii, masses, container_width, container_height):
+    placed_circles = []
+    placed_masses = []
+
+    for r, m in zip(radii, masses):
+        candidate_positions = generate_candidate_positions(placed_circles, r, container_width, container_height)
+        valid_candidates_stage1 = [p for p in candidate_positions if not does_overlap(placed_circles, p, r)]
+        
+        if not valid_candidates_stage1:
+            print(f"No valid placement found for radius {r}")
+            continue
+        
+        potential_com_distances = []
+        potential_wasted_space_penalties = []
+        
+        for candidate in valid_candidates_stage1:
+            potential_com = calculate_potential_com(placed_circles, placed_masses, candidate, m)
+            dist = calc_dist(potential_com, (container_width / 2, container_height / 2))
+            potential_com_distances.append(dist)
+        
+        #Sort by COM distance
+        sorted_by_com = sorted(zip(potential_com_distances, valid_candidates_stage1), key=lambda x: x[0])
+        
+        #Take top candidate by COM
+        best_candidate = sorted_by_com[0][1]
+        
+        #Store with radius for later reference
+        placed_circles.append((best_candidate[0], best_candidate[1], r))
+        placed_masses.append(m)
+    
+    return placed_circles, placed_masses

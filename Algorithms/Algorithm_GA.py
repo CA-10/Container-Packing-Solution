@@ -1,3 +1,4 @@
+import random
 from AlgorithmBase import AlgorithmBase as AB
 from GA.Population_Cartesian import Population_Cartesian
 from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
@@ -65,7 +66,6 @@ class Algorithm_GA(AB):
             child1, child2 = self.population.crossover(parent_a.genome, parent_b.genome)
 
             for child in (child1, child2):
-                child_com = calculate_com_penalty(child.genome, self.masses, [a.container_width / 2, a.container_height / 2])[0]
                 child.genome = self.population.mutate(child.genome)
                 temp_population.append(child)
 
@@ -78,8 +78,8 @@ class Algorithm_GA(AB):
             print(self.population.population_tostring())
             
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(300, 600, 0.03, 20, 15, 10, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500], "tournament", 5)
-#a = Algorithm_GA(300, 700, 0.03, 100, 100, 10, [random.randint(3.0, 10.0) for _ in range(10)], [random.randint(100, 2500) for _ in range(10)])
+a = Algorithm_GA(300, 800, 0.03, 30, 15, 14, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 5)
+#a = Algorithm_GA(1000, 700, 0.03, 100, 100, 15, [random.randint(3, 15) for _ in range(60)], [random.randint(100, 2500) for _ in range(15)])
 
 
 
