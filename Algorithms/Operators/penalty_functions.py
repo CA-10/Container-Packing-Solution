@@ -102,36 +102,31 @@ def calculate_com_penalty(positions, masses, safety_zone_center):
     
     return com, penalty
 
-def calculate_bounding_box_wasted_space(positions, radii):
-    # Determine the bounding box edges
-    min_x = min(x - r for (x, y), r in zip(positions, radii))
-    max_x = max(x + r for (x, y), r in zip(positions, radii))
-    min_y = min(y - r for (x, y), r in zip(positions, radii))
-    max_y = max(y + r for (x, y), r in zip(positions, radii))
-
-    # Bounding box area
-    bounding_box_area = (max_x - min_x) * (max_y - min_y)
-
-    # Total area of all circles
-    circle_area = sum(math.pi * r**2 for r in radii)
-
-    # Wasted space is the difference
-    wasted_space = (bounding_box_area - circle_area)
-
-    # Optional: normalize
-    normalized_wasted_space = (wasted_space / bounding_box_area)
-    
-    return normalized_wasted_space  # Lower is better
-
-def calculate_packing_fitness(positions, radii):
+def calculate_packing_fitness(positions, radii, mask):
     total_area = sum(r ** 2 for r in radii)
-    cx = sum(x * r ** 2 for (x, y), r in zip(positions, radii)) / total_area
-    cy = sum(y * r ** 2 for (x, y), r in zip(positions, radii)) / total_area
+    cx = sum(x * r ** 2 for (x, y), r, s in zip(positions, radii, mask) if s != 0) / total_area
+    cy = sum(y * r ** 2 for (x, y), r, s in zip(positions, radii, mask) if s != 0) / total_area
 
-    # Average squared distance from centroid (spread)
-    spread = sum(((x - cx) ** 2 + (y - cy) ** 2) for (x, y) in positions) / len(positions)
+    #Average squared distance from centroid (spread)
+    spread_penalty = sum(((x - cx) ** 2 + (y - cy) ** 2) for (x, y,), s in zip(positions, mask) if s != 0) / math.sqrt(len(positions))
     
-    return spread  # lower is better
+    return spread_penalty
+
+def calculate_overweight_penalty(circles_s, masses, mass_limit):
+    included_masses = []
+
+    for i in range(len(circles_s)):
+        if circles_s[i] == 1:
+            included_masses.append(masses[i])
+
+    total_mass = sum(included_masses)
+    excess = mass_limit - total_mass
+
+    if excess < 0:
+        return abs(excess)
+    
+    return 0
+
 
 def calculate_total_penalty(positions, radii, masses, container_width, container_height):
     p1 = calculate_overlap_penalty(positions, radii)
@@ -139,4 +134,4 @@ def calculate_total_penalty(positions, radii, masses, container_width, container
     p3 = calculate_com_penalty(positions, masses, [container_width / 2, container_height / 2])[1]
     p4 = calculate_packing_fitness(positions, radii)
 
-    return (10.0 * p1) + (1.0 * p2) + (1.0 * p3) + (1.6 * p4)
+    return (5.8 * p1) + (1.0 * p2) + (1.0 * p3) + (0.6 * p4) + (1.0 * p5)

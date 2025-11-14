@@ -63,31 +63,34 @@ def calculate_potential_com(placed_circles, placed_masses, new_circle, m):
     
     return com
 
-def place_circles(radii, masses, container_width, container_height):
+def place_circles(radii, masses, container_width, container_height, order_based_on_com=True):
     placed_circles = []
     placed_masses = []
 
     for r, m in zip(radii, masses):
         candidate_positions = generate_candidate_positions(placed_circles, r, container_width, container_height)
-        valid_candidates_stage1 = [p for p in candidate_positions if not does_overlap(placed_circles, p, r)]
+        valid_candidates = [p for p in candidate_positions if not does_overlap(placed_circles, p, r)]
         
-        if not valid_candidates_stage1:
+        if not valid_candidates:
             print(f"No valid placement found for radius {r}")
             continue
         
         potential_com_distances = []
         potential_wasted_space_penalties = []
         
-        for candidate in valid_candidates_stage1:
-            potential_com = calculate_potential_com(placed_circles, placed_masses, candidate, m)
-            dist = calc_dist(potential_com, (container_width / 2, container_height / 2))
-            potential_com_distances.append(dist)
-        
-        #Sort by COM distance
-        sorted_by_com = sorted(zip(potential_com_distances, valid_candidates_stage1), key=lambda x: x[0])
-        
-        #Take top candidate by COM
-        best_candidate = sorted_by_com[0][1]
+        if order_based_on_com:
+            for candidate in valid_candidates:
+                potential_com = calculate_potential_com(placed_circles, placed_masses, candidate, m)
+                dist = calc_dist(potential_com, (container_width / 2, container_height / 2))
+                potential_com_distances.append(dist)
+            
+            #Sort by COM distance
+            sorted_by_com = sorted(zip(potential_com_distances, valid_candidates), key=lambda x: x[0])
+            
+            #Take top candidate by COM
+            best_candidate = sorted_by_com[0][1]
+        else:
+            best_candidate = valid_candidates[0]
         
         #Store with radius for later reference
         placed_circles.append((best_candidate[0], best_candidate[1], r))
