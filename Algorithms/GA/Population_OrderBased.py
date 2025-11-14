@@ -42,7 +42,7 @@ class Population_OrderBased(Population):
         return child1_member, child2_member
   
     def mutate(self, genome):
-        new_genome = swap_mutation(genome, self.mutation_rate)
+        new_genome = shuffle_mutation(genome, self.mutation_rate)
         return new_genome
     
     def calculate_fitness(self):
@@ -56,7 +56,7 @@ class Population_OrderBased(Population):
                 ordered_radii.append(self.mapping_dict[gene][0])
                 ordered_masses.append(self.mapping_dict[gene][1])
 
-            self.placed_circles, self.placed_masses = place_circles(ordered_radii, ordered_masses, self.container_width, self.container_height)
+            self.placed_circles, self.placed_masses = place_circles(ordered_radii, ordered_masses, self.container_width, self.container_height, order_based_on_com=False)
 
             positions = []
             radii = []
@@ -80,7 +80,7 @@ class Population_OrderBased(Population):
             ordered_radii.append(self.mapping_dict[gene][0])
             ordered_masses.append(self.mapping_dict[gene][1])
 
-        placed_circles, placed_masses = place_circles(ordered_radii, ordered_masses, self.container_width, self.container_height)
+        placed_circles, placed_masses = place_circles(ordered_radii, ordered_masses, self.container_width, self.container_height, order_based_on_com=False)
 
         positions = []
         radii = []

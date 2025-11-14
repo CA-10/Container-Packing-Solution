@@ -102,7 +102,8 @@ class Algorithm_Memetic(AB):
 
             new_fitness = self.population.evaluate_individual(new_genome)
 
-            if new_fitness > best_fitness:
+            #Random is used so that local search does not always go for the best members, but allows diversity too
+            if new_fitness >= best_fitness or random.random() < 0.01:
                 best_genome = new_genome
                 best_fitness = new_fitness
 
@@ -111,8 +112,8 @@ class Algorithm_Memetic(AB):
         child.fitness = best_fitness
         return child
 
-a = Algorithm_Memetic(100, 5, 0.3, 30, 15, 14, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament")
-#a = Algorithm_Memetic(100, 50, 0.8, 50, 50, 15, [random.randint(2, 10) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
+a = Algorithm_Memetic(20, 30, 0.4, 30, 30, 16, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2, 2.0, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300, 2500, 2500], "tournament", 2)
+#a = Algorithm_Memetic(20, 30, 0.4, 60, 60, 15, [random.randint(2, 5) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
 a.run()
 
 pos = []
@@ -120,8 +121,8 @@ radii_ordered = []
 masses_ordered = []
 
 for circle in a.population.placed_circles:
-    pos.append((circle[0], circle[1]))  # x, y position
-    radii_ordered.append(circle[2])      # radius stored in the tuple
+    pos.append((circle[0], circle[1]))  #x, y position
+    radii_ordered.append(circle[2])     #radius stored in the tuple
 
 # Get masses in the same order they were placed
 masses_ordered = a.population.placed_masses
@@ -132,3 +133,5 @@ cb = Visualisation_Object(pos, radii_ordered, masses_ordered, com,
 
 c = Custom_Visualisation()
 c.visualise(cb)
+
+Results_Graphs.draw_fitness_over_gens(a.best_fitnesses)
