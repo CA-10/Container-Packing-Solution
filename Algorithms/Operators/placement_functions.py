@@ -1,5 +1,6 @@
 import math
-from Operators.penalty_functions import *
+import Operators.penalty_functions as penalty_functions
+from Container_Context import Container_Context
 
 def generate_candidate_positions(placed_circles, circle_r, container_width, container_height):
     candidate_positions = []
@@ -63,12 +64,16 @@ def calculate_potential_com(placed_circles, placed_masses, new_circle, m):
     
     return com
 
-def place_circles(radii, masses, container_width, container_height, order_based_on_com=True):
+def place_circles(radii: list[float], masses: list[int], masks: list[int], container_context: Container_Context, remaining_mass: int, respect_mass_limit=True, order_based_on_com=True) -> tuple[list[tuple[float, float, float]], list[int], list[int]]:
     placed_circles = []
     placed_masses = []
+    placed_masks = []
 
     for r, m in zip(radii, masses):
-        candidate_positions = generate_candidate_positions(placed_circles, r, container_width, container_height)
+        if respect_mass_limit and m > remaining_mass:
+            continue
+
+        candidate_positions = generate_candidate_positions(placed_circles, r, container_context.container_width, container_context.container_height)
         valid_candidates = [p for p in candidate_positions if not does_overlap(placed_circles, p, r)]
         
         if not valid_candidates:
@@ -76,12 +81,11 @@ def place_circles(radii, masses, container_width, container_height, order_based_
             continue
         
         potential_com_distances = []
-        potential_wasted_space_penalties = []
         
         if order_based_on_com:
             for candidate in valid_candidates:
                 potential_com = calculate_potential_com(placed_circles, placed_masses, candidate, m)
-                dist = calc_dist(potential_com, (container_width / 2, container_height / 2))
+                dist = calc_dist(potential_com, (container_context.container_width / 2, container_context.container_height / 2))
                 potential_com_distances.append(dist)
             
             #Sort by COM distance
@@ -92,8 +96,15 @@ def place_circles(radii, masses, container_width, container_height, order_based_
         else:
             best_candidate = valid_candidates[0]
         
-        #Store with radius for later reference
+        #Store with radius and mask for later reference
         placed_circles.append((best_candidate[0], best_candidate[1], r))
         placed_masses.append(m)
+        placed_masks.append(1)
+
+        remaining_mass -= m
+
+    #We've reached the end of placing all the circles, need to fill in the rest of the mask with 0
+    while len(placed_masks) != len(masks):
+        placed_masks.append(0)
     
-    return placed_circles, placed_masses
+    return placed_circles, placed_masses, placed_masks
