@@ -1,13 +1,43 @@
-import random
 from GA.Member import Member
+from GA.Gene_Cartesian import Gene_Cartesian
+import random
+import Operators.penalty_functions as penalty_functions
+from Vector2 import Vector2
+from Container_Context import Container_Context
+import math
 
 class Member_Cartesian(Member):
+    def __init__(self, radii: list[float], masses: list[int], container_context: Container_Context, num_genes: int):
+        super().__init__(radii, masses, container_context, num_genes)
+        self.genome: list[Gene_Cartesian] = []
+
+        self.init_genome()
+
+    def init_genome(self) -> None:
+        for i in range(self.num_genes):
+            random_x = random.randint(0, self.container_context.container_width)
+            random_y = random.randint(0, self.container_context.container_height)
+            random_mask = random.randint(0, 1)
+
+            self.genome.append(Gene_Cartesian(random_x, random_y, random_mask, self.radii[i], self.masses[i]))
     
-    def __init__(self, container_width, container_height, num_genes):
-        self.container_width = container_width
-        self.container_height = container_height
-        super().__init__(num_genes)
+    def calculate_fitness(self) -> float:
+        positions = [self.genome[i].position for i in range(len(self.genome))]
+        masks = [self.genome[i].mask for i in range(len(self.genome))]
+        radii = [self.genome[i].radius for i in range(len(self.genome))]
+        masses = [self.genome[i].mass for i in range(len(self.genome))]
+
+        p1 = penalty_functions.calculate_overlap_penalty(positions, masks, radii)
+        p2 = penalty_functions.calculate_bounds_overlap_penalty(positions, masks, radii, self.container_context.container_width, self.container_context.container_height)
+        p3 = penalty_functions.calculate_com_penalty(positions, masks, masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
+        p4 = penalty_functions.calculate_packing_fitness(positions, radii, masks)
+        p5 = penalty_functions.knapsack_term(masses, masks, self.container_context.container_mass_limit)
+
+        penalty = (10.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4) + (15.0 * 0)
+        fitness = math.exp(-0.001 * penalty)
+
+        return fitness
     
-    def init_genome(self):
-        #Randomly generate the Cartesian coordinates upon construction
-        self.genome = [(random.randint(0, self.container_width), random.randint(0, self.container_height)) for _ in range(self.num_genes)]
+    def mutate(self, mutation_rate: float) -> None:
+        for gene in self.genome:
+            gene.mutate(mutation_rate)
