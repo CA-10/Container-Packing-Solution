@@ -19,21 +19,19 @@ class Member_Cartesian(Member):
             random_y = random.randint(0, self.container_context.container_height)
             random_mask = random.randint(0, 1)
 
-            self.genome.append(Gene_Cartesian(random_x, random_y, random_mask, self.radii[i], self.masses[i]))
+            self.genome.append(Gene_Cartesian(random_x, random_y, self.radii[i], self.masses[i]))
     
     def calculate_fitness(self) -> float:
         positions = [self.genome[i].position for i in range(len(self.genome))]
-        masks = [self.genome[i].mask for i in range(len(self.genome))]
         radii = [self.genome[i].radius for i in range(len(self.genome))]
         masses = [self.genome[i].mass for i in range(len(self.genome))]
 
-        p1 = penalty_functions.calculate_overlap_penalty(positions, masks, radii)
-        p2 = penalty_functions.calculate_bounds_overlap_penalty(positions, masks, radii, self.container_context.container_width, self.container_context.container_height)
-        p3 = penalty_functions.calculate_com_penalty(positions, masks, masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
-        p4 = penalty_functions.calculate_packing_fitness(positions, radii, masks)
-        p5 = penalty_functions.knapsack_term(masses, masks, self.container_context.container_mass_limit)
+        p1 = penalty_functions.calculate_overlap_penalty(positions, radii)
+        p2 = penalty_functions.calculate_bounds_overlap_penalty(positions, radii, self.container_context.container_width, self.container_context.container_height)
+        p3 = penalty_functions.calculate_com_penalty(positions, masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
+        p4 = penalty_functions.calculate_packing_fitness(positions, radii)
 
-        penalty = (10.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4) + (15.0 * 0)
+        penalty = (5.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4) + (15.0 * 0)
         fitness = math.exp(-0.001 * penalty)
 
         return fitness

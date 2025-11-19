@@ -64,15 +64,11 @@ def calculate_potential_com(placed_circles, placed_masses, new_circle, m):
     
     return com
 
-def place_circles(radii: list[float], masses: list[int], masks: list[int], container_context: Container_Context, remaining_mass: int, respect_mass_limit=True, order_based_on_com=True) -> tuple[list[tuple[float, float, float]], list[int], list[int]]:
+def place_circles(radii: list[float], masses: list[int], container_context: Container_Context, order_based_on_com=True) -> tuple[list[tuple[float, float, float]], list[int]]:
     placed_circles = []
     placed_masses = []
-    placed_masks = []
 
     for r, m in zip(radii, masses):
-        if respect_mass_limit and m > remaining_mass:
-            continue
-
         candidate_positions = generate_candidate_positions(placed_circles, r, container_context.container_width, container_context.container_height)
         valid_candidates = [p for p in candidate_positions if not does_overlap(placed_circles, p, r)]
         
@@ -99,12 +95,5 @@ def place_circles(radii: list[float], masses: list[int], masks: list[int], conta
         #Store with radius and mask for later reference
         placed_circles.append((best_candidate[0], best_candidate[1], r))
         placed_masses.append(m)
-        placed_masks.append(1)
 
-        remaining_mass -= m
-
-    #We've reached the end of placing all the circles, need to fill in the rest of the mask with 0
-    while len(placed_masks) != len(masks):
-        placed_masks.append(0)
-    
-    return placed_circles, placed_masses, placed_masks
+    return placed_circles, placed_masses

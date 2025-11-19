@@ -3,9 +3,8 @@ import random
 from Vector2 import Vector2
 
 class Gene_Cartesian(Gene):
-    def __init__(self, x: int, y: int, mask: int, radius: float, mass: int):
+    def __init__(self, x: int, y: int, radius: float, mass: int):
         self.position = Vector2(x, y)
-        self.mask = mask
 
         #Phenotypes
         self.radius = radius
@@ -17,6 +16,3 @@ class Gene_Cartesian(Gene):
             new_y = self.position.y + random.randint(-20, 20)
 
             self.position = Vector2(new_x, new_y)
-        
-        if random.random() < mutation_rate:
-            self.mask = 1 - self.mask

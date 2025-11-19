@@ -10,7 +10,7 @@ from Container_Context import Container_Context
 
 class Algorithm_GA(AB):
     
-    def __init__(self, max_generations: int, population_size: int, mutation_rate: float, container_width: int, container_height: int, container_mass_limit: int, radii: list[float], masses: list[int], selection_method:str="roulette", tournament_size:int=3):
+    def __init__(self, max_generations: int, population_size: int, mutation_rate: float, container_width: int, container_height: int, radii: list[float], masses: list[int], selection_method:str="roulette", tournament_size:int=3):
         self.gen_count = 0
         self.max_generations = max_generations
         self.population_size = population_size
@@ -23,7 +23,7 @@ class Algorithm_GA(AB):
         self.tournament_size = tournament_size
         self.mutation_rate = mutation_rate
         
-        self.container_context = Container_Context(container_width, container_height, container_mass_limit)
+        self.container_context = Container_Context(container_width, container_height)
         self.population = Population_Cartesian(population_size, self.container_context, radii, masses)
     
     def run(self) -> None:
@@ -73,7 +73,7 @@ class Algorithm_GA(AB):
         return best
 
 #====TODO Remove, this is just testing code.====
-a = Algorithm_GA(300, 800, 0.05, 30, 15, 1000, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 6)
+a = Algorithm_GA(300, 800, 0.05, 30, 15, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 8)
 #a = Algorithm_GA(1000, 700, 0.03, 100, 100, 1000, [random.randint(3, 15) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
 
 
@@ -85,12 +85,10 @@ best_member = a.population.population[a.population.fitnesses.index(max(a.populat
 
 positions = []
 vector2positions = []
-masks = []
 
 for gene in best_member:
     positions.append([gene.position.x, gene.position.y])
     vector2positions.append(gene.position)
-    masks.append(gene.mask)
 
 #com = calculate_com_penalty(best_member.genome, a.masses, [a.container_width / 2, a.container_height / 2])[0]
 com = [0, 0]
