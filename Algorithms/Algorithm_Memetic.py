@@ -8,10 +8,12 @@ import time
 from Operators.penalty_functions import *
 from Algorithm_Greedy import Algorithm_Greedy
 from GA.Member_OrderBased import Member_OrderBased
+from Container_Context import Container_Context
+import Operators.placement_functions as placement_functions
 
 class Algorithm_Memetic(AB):
-
-    def __init__(self, max_generations, population_size, mutation_rate, container_width, container_height, num_circles, radii, masses, selection_method="roulette", tournament_size=3):
+    
+    def __init__(self, max_generations: int, population_size: int, mutation_rate: float, container_width: int, container_height: int, radii: list[float], masses: list[int], selection_method:str="roulette", tournament_size:int=3):
         self.gen_count = 0
         self.max_generations = max_generations
         self.population_size = population_size
@@ -22,18 +24,16 @@ class Algorithm_Memetic(AB):
         self.best_fitnesses = []
         self.selection_method = selection_method
         self.tournament_size = tournament_size
-        self.num_circles = num_circles
-        self.greedy_algorithm = None
+        self.mutation_rate = mutation_rate
         
-        #Create the population object and assign to self.population
-        self.population = Population_OrderBased(population_size, mutation_rate, container_width, container_height, num_circles, radii, masses)
+        self.container_context = Container_Context(container_width, container_height)
+        self.population = Population_OrderBased(population_size, self.container_context, radii, masses)
     
-    def run(self):
+    def run(self) -> None:
         start_time = time.time()
         
         for gen in range(self.max_generations):
-            self.run_generation()  
-            max_fitness = self.population.calculate_fitness()
+            max_fitness = self.run_generation()  
             self.best_fitnesses.append(max_fitness)
             
             print(f"Generation: {gen}")
@@ -48,23 +48,21 @@ class Algorithm_Memetic(AB):
         
         end_time = time.time()
         self.runtime_seconds = end_time - start_time
-
-        overall_fitness = self.population.calculate_fitness()
-
-        self.fitness = overall_fitness
+        self.fitness = self.population.calculate_fitness()
         
         self.print_stats()
             
-    def run_generation(self, show_pop_output=False, elitism_count=1):
-        #Evaluate current population
-        self.population.calculate_fitness()
+    def run_generation(self) -> float:
+        # Evaluate current population
+        self.population.place_members()
+        best = self.population.calculate_fitness()
 
-        #Keep elites
-        fitnesses = self.population.fitnesses
-        sorted_indices = sorted(range(len(fitnesses)), key=lambda i: fitnesses[i], reverse=True)
-        elites = [self.population.population[i] for i in sorted_indices[:elitism_count]]
+        # --- ELITISM ADDED HERE ---
+        elite = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))]  # assumes you have such a method
+        # If you don’t, replace with: elite = max(self.population.population, key=lambda m: m.fitness)
+        # ---------------------------
 
-        temp_population = elites.copy()
+        temp_population = [elite]  # keep elite
 
         while len(temp_population) < self.population_size:
             if self.selection_method == "roulette":
@@ -76,20 +74,19 @@ class Algorithm_Memetic(AB):
             else:
                 raise Exception(f"{self.selection_method} not a valid selection method")
 
-            child1, child2 = self.population.crossover(parent_a.genome, parent_b.genome)
+            child1, child2 = self.population.crossover(parent_a, parent_b)
+            temp_population.extend([child1, child2])
 
-            #Mutate and locally improve each child
-            for child in (child1, child2):
-                child.genome = self.population.mutate(child.genome)
-                child = self.local_search(child)  #Local Search
-                temp_population.append(child)
-
-                if len(temp_population) >= self.population_size:
-                    break
-
-        #Replace old population
         self.population.population = temp_population[:self.population_size]
+        self.population.mutate(self.mutation_rate)
 
+        self.population.place_members()
+        best = self.population.calculate_fitness()
+
+        return best
+
+
+    """
     def local_search(self, child, max_attempts=15):
         best_genome = child.genome[:]
         best_fitness = self.population.evaluate_individual(child.genome)
@@ -110,26 +107,24 @@ class Algorithm_Memetic(AB):
         # update the child's genome and fitness
         child.genome = best_genome
         child.fitness = best_fitness
-        return child
+        return child"""
 
-a = Algorithm_Memetic(20, 30, 0.4, 30, 30, 16, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2, 2.0, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300, 2500, 2500], "tournament", 2)
+a = Algorithm_Memetic(100, 40, 0.02, 30, 15, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 8)
 #a = Algorithm_Memetic(20, 30, 0.4, 60, 60, 15, [random.randint(2, 5) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
 a.run()
 
-pos = []
-radii_ordered = []
-masses_ordered = []
+best_member = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))].genome
 
-for circle in a.population.placed_circles:
-    pos.append((circle[0], circle[1]))  #x, y position
-    radii_ordered.append(circle[2])     #radius stored in the tuple
+positions = []
+vector2positions = []
 
-# Get masses in the same order they were placed
-masses_ordered = a.population.placed_masses
+for gene in best_member:
+    positions.append([gene.position.x, gene.position.y])
+    vector2positions.append(gene.position)
 
-com = calculate_com_penalty(pos, masses_ordered, radii_ordered)[0]
-cb = Visualisation_Object(pos, radii_ordered, masses_ordered, com, 
-                          a.container_width, a.container_height)
+#com = calculate_com_penalty(best_member.genome, a.masses, [a.container_width / 2, a.container_height / 2])[0]
+com = [0, 0]
+cb = Visualisation_Object(positions, a.radii, a.masses, com, a.container_width, a.container_height)
 
 c = Custom_Visualisation()
 c.visualise(cb)

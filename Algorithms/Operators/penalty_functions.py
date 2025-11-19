@@ -7,9 +7,7 @@ def calculate_overlap_penalty(positions: list[Vector2], radii: list[float]) -> f
     #For each circle, loop over each circle again apart from current and calculate overlap between all circles.
     for i in range(len(positions)):
 
-
         for j in range(i + 1, len(positions)):
-
 
             #Use the Euclidian distance formuala: d = sqrt((xi - xj)^2 + (yi - yj)^2)
             dx = positions[i].x - positions[j].x
@@ -32,7 +30,6 @@ def calculate_com_penalty(positions: list[Vector2], masses: list[int], safety_zo
     total_mass = sum(masses)
 
     for i in range(len(positions)):
-
 
         circle = positions[i]
         circle_x = circle.x

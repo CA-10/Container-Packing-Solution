@@ -1,24 +1,23 @@
 from GA.Member import Member
-from GA.Gene_Cartesian import Gene_Cartesian
+from GA.Gene_OrderBased import Gene_OrderBased
 import random
 import Operators.penalty_functions as penalty_functions
 from Vector2 import Vector2
 from Container_Context import Container_Context
 import math
 
-class Member_Cartesian(Member):
+class Member_OrderBased(Member):
     def __init__(self, radii: list[float], masses: list[int], container_context: Container_Context, num_genes: int):
         super().__init__(radii, masses, container_context, num_genes)
-        self.genome: list[Gene_Cartesian] = []
+        self.genome: list[Gene_OrderBased] = []
 
         self.init_genome()
 
     def init_genome(self) -> None:
         for i in range(self.num_genes):
-            random_x = random.randint(0, self.container_context.container_width)
-            random_y = random.randint(0, self.container_context.container_height)
+            random_order = random.randint(0, self.num_genes - 1)
 
-            self.genome.append(Gene_Cartesian(random_x, random_y, self.radii[i], self.masses[i]))
+            self.genome.append(Gene_OrderBased(random_order, self.radii[i], self.masses[i]))
     
     def calculate_fitness(self) -> float:
         positions = [self.genome[i].position for i in range(len(self.genome))]

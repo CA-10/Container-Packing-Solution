@@ -22,8 +22,8 @@ class Algorithm_Greedy(AB):
         self.placed_masses = []
     
     def run(self) -> None:
-        #Sort by mass ascending for greedy because we can fit more containers in without exceeding the weight limit
-        sorted_pairs = sorted(zip(self.masses, self.radii), reverse=False)
+        #Sort by mass descending because this will make sure the COM is central.
+        sorted_pairs = sorted(zip(self.masses, self.radii), reverse=True)
         self.masses = [m for m, _ in sorted_pairs]
         self.radii = [r for _, r in sorted_pairs]
 
@@ -51,8 +51,8 @@ class Algorithm_Greedy(AB):
         return fitness
         
 if __name__ == "__main__":
-    c = Container_Context(20, 15)
-    a = Algorithm_Greedy(c, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500])
+    c = Container_Context(30, 15)
+    a = Algorithm_Greedy(c, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300])
     #a = Algorithm_Greedy(200, 200, 200, [random.randint(2, 10) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
     a.run()
 

@@ -46,3 +46,28 @@ def single_point_crossover(parent1_bits: list[int], parent2_bits: list[int]) -> 
     child2 = parent2_bits[:point] + parent1_bits[point:]
 
     return child1, child2
+
+def ordered_crossover(parent_a: list[int], parent_b: list[int]) -> tuple[list[int], list[int]]:
+    n = len(parent_a)
+    
+    p1, p2 = sorted(random.sample(range(n), 2))
+    
+    child1 = [0 for _ in range(n)]
+    child2 = [0 for _ in range(n)]
+
+    child1[p1:p2+1] = parent_a[p1:p2+1]
+    child2[p1:p2+1] = parent_b[p1:p2+1]
+
+    fill_from_parent(child1, parent_b, p2)
+    fill_from_parent(child2, parent_a, p2)
+
+    return child1, child2
+
+def fill_from_parent(child: list[int], donor_parent: list[int], start_index: int) -> None:
+    n = len(child)
+    current_index = (start_index + 1) % n
+    
+    for gene in donor_parent:
+        if gene not in child:
+            child[current_index] = gene
+            current_index = (current_index + 1) % n
