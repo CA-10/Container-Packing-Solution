@@ -1,13 +1,14 @@
 import random
 from AlgorithmBase import AlgorithmBase as AB
-from GA.Member import Member
+from GA.Member_Cartesian import Member_Cartesian
 from Visualisation.Custom_Visualisation import Custom_Visualisation
 from Visualisation.Visualisation_Object import Visualisation_Object
 import time
+from Container_Context import Container_Context
 
 class Algorithm_Random(AB):
     
-    def __init__(self, radii, masses, container_width, container_height, num_circles, max_iterations):
+    def __init__(self, radii: list[float], masses: list[int], container_width: int, container_height: int, num_circles: int, max_iterations: int):
         self.current = None
         self.best = None
         self.best_fitness = 0
@@ -18,25 +19,18 @@ class Algorithm_Random(AB):
         self.container_height = container_height
         self.max_iterations = max_iterations
     
-    def generate_random_solution(self):
+    def generate_random_solution(self) -> None:
         #Reusing the Member class because it implements everything we need
-        self.current = Member(self.container_width, self.container_height, self.num_circles)
+        container_context = Container_Context(self.container_width, self.container_height)
+        self.current = Member_Cartesian(self.radii, self.masses, container_context, self.num_circles)
     
-    def evaluate_current_solution(self):
+    def evaluate_current_solution(self) -> float:
         if self.current == None:
-            return
+            return 0.0
         
-        penalty = 0
-        penalty += self.current.calculate_overlap(self.radii) * 1.3
-        penalty += self.current.calculate_bounds_overlap(self.radii) * 1.0
-        penalty += self.current.calculate_com_penalty(self.masses, [self.container_width / 2, self.container_height / 2])[1] * 1.0
-        penalty += self.current.calculate_touching_penalty(self.radii) * 1.0
-
-        fitness = 1 / (1 + penalty)
-        
-        return fitness
+        return self.current.calculate_fitness()
     
-    def run(self):
+    def run(self) -> None:
         start_time = time.time()
         
         for i in range(self.max_iterations):
@@ -64,15 +58,23 @@ class Algorithm_Random(AB):
         
         
 #====TODO Remove, this is just testing code.====
-a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2], [2500, 2500, 800, 800, 300], 20, 15, 5, 10000)
+a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], 20, 15, 14, 100000)
 
 a.run()
 
 
 best_member = a.best
 
-com = best_member.calculate_com_penalty(a.masses, [a.container_width / 2, a.container_height / 2])[0]
-cb = Visualisation_Object(best_member.genome, a.radii, a.masses, com, a.container_width, a.container_height)
+positions = []
+vector2positions = []
+
+for gene in best_member.genome: #type: ignore
+    positions.append([gene.position.x, gene.position.y])
+    vector2positions.append(gene.position)
+
+#com = calculate_com_penalty(best_member.genome, a.masses, [a.container_width / 2, a.container_height / 2])[0]
+com = [0, 0]
+cb = Visualisation_Object(positions, a.radii, a.masses, com, a.container_width, a.container_height)
 
 c = Custom_Visualisation()
 c.visualise(cb)
