@@ -20,20 +20,17 @@ class Algorithm_Greedy(AB):
         self.radii = radii
         self.placed_circles = []
         self.placed_masses = []
-        self.masks = [1 for _ in range(len(radii))]
-        self.remaining_capacity = self.container_context.container_mass_limit
     
     def run(self) -> None:
         #Sort by mass ascending for greedy because we can fit more containers in without exceeding the weight limit
-        sorted_pairs = sorted(zip(self.masses, self.radii, self.masks), reverse=False)
-        self.masses = [m for m, _, _ in sorted_pairs]
-        self.radii = [r for _, r, _ in sorted_pairs]
-        self.masks = [s for _, _, s in sorted_pairs]
+        sorted_pairs = sorted(zip(self.masses, self.radii), reverse=False)
+        self.masses = [m for m, _ in sorted_pairs]
+        self.radii = [r for _, r in sorted_pairs]
 
         self.placed_circles = []
         self.placed_masses = []
 
-        self.placed_circles, self.placed_masses, self.placed_masks = placement_functions.place_circles(self.radii, self.masses, self.masks, self.container_context, self.container_context.container_mass_limit)
+        self.placed_circles, self.placed_masses = placement_functions.place_circles(self.radii, self.masses, self.container_context)
         
     def calculate_fitness(self) -> float:
         positions = []
@@ -43,11 +40,10 @@ class Algorithm_Greedy(AB):
             positions.append(Vector2(x, y))
             radii.append(r)
                 
-        p1 = penalty_functions.calculate_overlap_penalty(positions, self.placed_masks, radii)
-        p2 = penalty_functions.calculate_bounds_overlap_penalty(positions, self.placed_masks, radii, self.container_context.container_width, self.container_context.container_height)
-        p3 = penalty_functions.calculate_com_penalty(positions, self.placed_masks, self.placed_masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
-        p4 = penalty_functions.calculate_packing_fitness(positions, radii, self.placed_masks)
-        p5 = penalty_functions.knapsack_term(self.placed_masses, self.placed_masks, self.container_context.container_mass_limit)
+        p1 = penalty_functions.calculate_overlap_penalty(positions, radii)
+        p2 = penalty_functions.calculate_bounds_overlap_penalty(positions, radii, self.container_context.container_width, self.container_context.container_height)
+        p3 = penalty_functions.calculate_com_penalty(positions, self.placed_masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
+        p4 = penalty_functions.calculate_packing_fitness(positions, radii)
 
         penalty = (10.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4) + (15.0 * 0)
         fitness = math.exp(-0.001 * penalty)
@@ -55,7 +51,7 @@ class Algorithm_Greedy(AB):
         return fitness
         
 if __name__ == "__main__":
-    c = Container_Context(20, 15, 5000)
+    c = Container_Context(20, 15)
     a = Algorithm_Greedy(c, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500])
     #a = Algorithm_Greedy(200, 200, 200, [random.randint(2, 10) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
     a.run()

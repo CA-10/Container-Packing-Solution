@@ -1,7 +1,7 @@
 import math
 from Vector2 import Vector2
 
-def calculate_overlap_penalty(positions: list[Vector2], masks: list[int], radii: list[float]) -> float:
+def calculate_overlap_penalty(positions: list[Vector2], radii: list[float]) -> float:
     penalty = 0
 
     #For each circle, loop over each circle again apart from current and calculate overlap between all circles.
@@ -24,7 +24,7 @@ def calculate_overlap_penalty(positions: list[Vector2], masks: list[int], radii:
     
     return penalty
 
-def calculate_com_penalty(positions: list[Vector2], masks: list[int], masses: list[int], safety_zone_center: Vector2) -> tuple[Vector2, float]:
+def calculate_com_penalty(positions: list[Vector2], masses: list[int], safety_zone_center: Vector2) -> tuple[Vector2, float]:
     penalty = 0
     com = Vector2(0, 0)
     sum_mx = 0
@@ -56,21 +56,21 @@ def calculate_com_penalty(positions: list[Vector2], masks: list[int], masses: li
     
     return com, penalty
 
-def calculate_packing_fitness(positions: list[Vector2], radii: list[float], masks: list[int]) -> float:
-    total_area = sum(r ** 2 for r, s in zip(radii, masks))
+def calculate_packing_fitness(positions: list[Vector2], radii: list[float]) -> float:
+    total_area = sum(r ** 2 for r in radii)
 
     if total_area == 0:
         return 1e6
     
-    cx = sum(pos.x * r ** 2 for (pos), r, s in zip(positions, radii, masks)) / total_area
-    cy = sum(pos.y * r ** 2 for (pos), r, s in zip(positions, radii, masks)) / total_area
+    cx = sum(pos.x * r ** 2 for (pos), r in zip(positions, radii)) / total_area
+    cy = sum(pos.y * r ** 2 for (pos), r in zip(positions, radii)) / total_area
 
     #Average squared distance from centroid (spread)
-    spread_penalty = sum(((pos.x - cx) ** 2 + (pos.y - cy) ** 2) for (pos), s in zip(positions, masks)) / len(positions)
+    spread_penalty = sum(((pos.x - cx) ** 2 + (pos.y - cy) ** 2) for (pos) in positions) / len(positions)
     
     return spread_penalty
 
-def calculate_bounds_overlap_penalty(positions: list[Vector2], masks: list[int], radii: list[float], container_width: int, container_height: int) -> float:
+def calculate_bounds_overlap_penalty(positions: list[Vector2], radii: list[float], container_width: int, container_height: int) -> float:
     penalty = 0
     
     #For each circle, check if the circle is outside the bounds of the container
@@ -93,18 +93,3 @@ def calculate_bounds_overlap_penalty(positions: list[Vector2], masks: list[int],
             penalty += abs(y + r - container_height)
     
     return penalty
-
-def knapsack_term(masses, masks, mass_limit):
-    total_mass = sum(m for m, mask in zip(masses, masks) if mask == 1)
-
-    # Reward filling the container
-    reward = total_mass / mass_limit  
-
-    # Soft penalty for being under limit or slightly above
-    penalty = abs(total_mass - mass_limit) / mass_limit  
-
-    # Heavy penalty for being massively overweight
-    if total_mass > mass_limit:
-        penalty += ((total_mass - mass_limit) / mass_limit)**2  
-
-    return penalty - reward

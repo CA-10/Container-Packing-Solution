@@ -55,11 +55,6 @@ class Population_Cartesian:
 
         child1_positions, child2_positions = crossover_functions.blended_crossover(parent_a_positions, parent_b_positions, alpha)
 
-        parent_a_masks = [parent_a.genome[i].mask for i in range(len(parent_a.genome))]
-        parent_b_masks = [parent_b.genome[i].mask for i in range(len(parent_b.genome))]
-
-        child1_mask, child2_mask = crossover_functions.single_point_crossover(parent_a_masks, parent_b_masks)
-
         child1 = Member_Cartesian(self.radii, self.masses, self.container_context, self.num_circles)
         child2 = Member_Cartesian(self.radii, self.masses, self.container_context, self.num_circles)
 
@@ -67,11 +62,11 @@ class Population_Cartesian:
         child2.genome = []
 
         for i in range(len(child1_positions)):
-            gene = Gene_Cartesian(child1_positions[i].x, child1_positions[i].y, child1_mask[i], parent_a.genome[i].radius, parent_a.genome[i].mass) #type: ignore
+            gene = Gene_Cartesian(child1_positions[i].x, child1_positions[i].y, parent_a.genome[i].radius, parent_a.genome[i].mass) #type: ignore
             child1.genome.append(gene)
 
         for i in range(len(child2_positions)):
-            gene = Gene_Cartesian(child2_positions[i].x, child2_positions[i].y, child2_mask[i], parent_a.genome[i].radius, parent_a.genome[i].mass) #type: ignore
+            gene = Gene_Cartesian(child2_positions[i].x, child2_positions[i].y, parent_a.genome[i].radius, parent_a.genome[i].mass) #type: ignore
             child2.genome.append(gene)
         
         return child1, child2
