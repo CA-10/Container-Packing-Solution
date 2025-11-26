@@ -1,17 +1,17 @@
 import random
-from AlgorithmBase import AlgorithmBase as AB
-from GA.Population_OrderBased import Population_OrderBased
-from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
-from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
-import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
+from Algorithms.AlgorithmBase import AlgorithmBase as AB
+from Algorithms.GA.Population_OrderBased import Population_OrderBased
+from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
+from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
+import Algorithms.Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import time
-from Operators.penalty_functions import *
-from Algorithm_Greedy import Algorithm_Greedy
-from GA.Member_OrderBased import Member_OrderBased
-from Container_Context import Container_Context
-import Operators.placement_functions as placement_functions
+from Algorithms.Operators.penalty_functions import *
+from Algorithms.Algorithm_Greedy import Algorithm_Greedy
+from Algorithms.GA.Member_OrderBased import Member_OrderBased
+from Algorithms.Container_Context import Container_Context
+import Algorithms.Operators.placement_functions as placement_functions
 
-class Algorithm_Memetic(AB):
+class Algorithm_Hybrid(AB):
     
     def __init__(self, max_generations: int, population_size: int, mutation_rate: float, container_width: int, container_height: int, radii: list[float], masses: list[int], selection_method:str="roulette", tournament_size:int=3):
         self.gen_count = 0
@@ -53,16 +53,12 @@ class Algorithm_Memetic(AB):
         self.print_stats()
             
     def run_generation(self) -> float:
-        # Evaluate current population
         self.population.place_members()
         best = self.population.calculate_fitness()
 
-        # --- ELITISM ADDED HERE ---
-        elite = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))]  # assumes you have such a method
-        # If you don’t, replace with: elite = max(self.population.population, key=lambda m: m.fitness)
-        # ---------------------------
-
-        temp_population = [elite]  # keep elite
+        #Use Elitism to discourage falling fitness
+        elite = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))]
+        temp_population = [elite]
 
         while len(temp_population) < self.population_size:
             if self.selection_method == "roulette":
@@ -85,32 +81,8 @@ class Algorithm_Memetic(AB):
 
         return best
 
-
-    """
-    def local_search(self, child, max_attempts=15):
-        best_genome = child.genome[:]
-        best_fitness = self.population.evaluate_individual(child.genome)
-
-        for _ in range(max_attempts):
-            # create a neighbor by swapping two positions
-            i, j = random.sample(range(len(best_genome)), 2)
-            new_genome = best_genome[:]
-            new_genome[i], new_genome[j] = new_genome[j], new_genome[i]
-
-            new_fitness = self.population.evaluate_individual(new_genome)
-
-            #Random is used so that local search does not always go for the best members, but allows diversity too
-            if new_fitness >= best_fitness or random.random() < 0.01:
-                best_genome = new_genome
-                best_fitness = new_fitness
-
-        # update the child's genome and fitness
-        child.genome = best_genome
-        child.fitness = best_fitness
-        return child"""
-
-a = Algorithm_Memetic(100, 40, 0.02, 30, 15, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 8)
-#a = Algorithm_Memetic(20, 30, 0.4, 60, 60, 15, [random.randint(2, 5) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
+a = Algorithm_Hybrid(100, 40, 0.04, 30, 15, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], "tournament", 8)
+#a = Algorithm_Hybrid(20, 30, 0.4, 60, 60, 15, [random.randint(2, 5) for _ in range(15)], [random.randint(100, 2500) for _ in range(15)])
 a.run()
 
 best_member = a.population.population[a.population.fitnesses.index(max(a.population.fitnesses))].genome

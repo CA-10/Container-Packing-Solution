@@ -1,5 +1,5 @@
 import math
-from Vector2 import Vector2
+from Algorithms.Vector2 import Vector2
 
 def calculate_overlap_penalty(positions: list[Vector2], radii: list[float]) -> float:
     penalty = 0

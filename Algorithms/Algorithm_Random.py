@@ -1,17 +1,17 @@
-import random
 from AlgorithmBase import AlgorithmBase as AB
 from GA.Member_Cartesian import Member_Cartesian
 from Visualisation.Custom_Visualisation import Custom_Visualisation
 from Visualisation.Visualisation_Object import Visualisation_Object
 import time
 from Container_Context import Container_Context
+import math
 
 class Algorithm_Random(AB):
     
     def __init__(self, radii: list[float], masses: list[int], container_width: int, container_height: int, num_circles: int, max_iterations: int):
         self.current = None
         self.best = None
-        self.best_fitness = 0
+        self.best_fitness = -math.inf
         self.radii = radii
         self.masses = masses
         self.num_circles = num_circles
@@ -58,7 +58,7 @@ class Algorithm_Random(AB):
         
         
 #====TODO Remove, this is just testing code.====
-a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], 20, 15, 14, 100000)
+a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], 20, 15, 14, 10000)
 
 a.run()
 

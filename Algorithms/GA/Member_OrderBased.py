@@ -30,7 +30,8 @@ class Member_OrderBased(Member):
         p4 = penalty_functions.calculate_packing_fitness(positions, radii)
 
         penalty = (15.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4)
-        fitness = math.exp(-0.001 * penalty)
+        #fitness = math.exp(-0.001 * penalty)
+        fitness = -penalty
 
         return fitness
     
