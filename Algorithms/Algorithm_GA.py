@@ -1,12 +1,12 @@
 import random
-from AlgorithmBase import AlgorithmBase as AB
-from GA.Population_Cartesian import Population_Cartesian
-from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
-from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
-import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
+from Algorithms.AlgorithmBase import AlgorithmBase as AB
+from Algorithms.GA.Population_Cartesian import Population_Cartesian
+from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
+from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
+import Algorithms.Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import time
-from Operators.penalty_functions import *
-from Container_Context import Container_Context
+from Algorithms.Operators.penalty_functions import *
+from Algorithms.Container_Context import Container_Context
 
 class Algorithm_GA(AB):
     

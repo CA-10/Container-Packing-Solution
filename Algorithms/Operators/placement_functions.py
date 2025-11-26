@@ -1,6 +1,6 @@
 import math
-import Operators.penalty_functions as penalty_functions
-from Container_Context import Container_Context
+import Algorithms.Operators.penalty_functions as penalty_functions
+from Algorithms.Container_Context import Container_Context
 
 def generate_candidate_positions(placed_circles, circle_r, container_width, container_height):
     candidate_positions = []

@@ -1,13 +1,13 @@
 import random
-from AlgorithmBase import AlgorithmBase as AB
+from Algorithms.AlgorithmBase import AlgorithmBase as AB
 import math
-from Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
-from Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
-import Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
-import Operators.penalty_functions as penalty_functions
-import Operators.placement_functions as placement_functions
-from Vector2 import Vector2
-from Container_Context import Container_Context
+from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
+from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
+import Algorithms.Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
+import Algorithms.Operators.penalty_functions as penalty_functions
+import Algorithms.Operators.placement_functions as placement_functions
+from Algorithms.Vector2 import Vector2
+from Algorithms.Container_Context import Container_Context
 
 class Algorithm_Greedy(AB):
 
@@ -45,8 +45,9 @@ class Algorithm_Greedy(AB):
         p3 = penalty_functions.calculate_com_penalty(positions, self.placed_masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
         p4 = penalty_functions.calculate_packing_fitness(positions, radii)
 
-        penalty = (10.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4) + (15.0 * 0)
-        fitness = math.exp(-0.001 * penalty)
+        penalty = (10.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4)
+        #fitness = math.exp(-0.001 * penalty)
+        fitness = -penalty
         
         return fitness
         
