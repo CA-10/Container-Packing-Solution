@@ -7,7 +7,7 @@ class Custom_Visualisation(Visualisation_Base):
     def visualise(self, visualisation_object, self_display=False, generation=None): #type: ignore
 
         #Use OO Figure instead of pyplot to avoid polluting global state
-        fig = Figure(figsize=(8, 8))
+        fig = Figure(figsize=(15, 15))
         ax = fig.add_subplot(111)
 
         container = plt.Rectangle( #type: ignore
