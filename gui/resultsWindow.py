@@ -73,8 +73,9 @@ class AlgorithmGUI:
         self.tab3 = ttk.Frame(self.notebook)
 
         #Setup the console to tab0
-        self.console_text = tk.Text(self.tab0, wrap="word", height=20)
+        self.console_text = tk.Text(self.tab0, wrap="word", height=20,)
         self.console_text.pack(fill="both", expand=True)
+        self.console_text.config(state=tk.DISABLED)
 
         #Redirect stdout to use the tab0 console
         sys.stdout = ConsoleRedirect(self.console_text)
@@ -92,7 +93,7 @@ class AlgorithmGUI:
 
     def poll_console(self):
         self.console_text.update_idletasks()
-        self.root.after(50, self.poll_console)  #Poll console every 50ms
+        self.root.after(10, self.poll_console)  #Poll console every 10ms
 
     def embed_chart(self, b64, tab):
         for widget in tab.winfo_children():
@@ -227,7 +228,7 @@ class AlgorithmGUI:
 
     def fig_to_base64(self, fig):
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", bbox_inches='tight', pad_inches=0) #type: ignore
+        fig.savefig(buf, format="png", bbox_inches='tight', pad_inches=0.3) #type: ignore
         buf.seek(0)
         b64 = base64.b64encode(buf.read()).decode("ascii")
 
