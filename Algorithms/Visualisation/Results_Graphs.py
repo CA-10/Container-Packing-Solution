@@ -11,7 +11,11 @@ def draw_fitness_over_gens(fitness_values, display=True, title="Fitness Over Gen
     fig = Figure(figsize=(10, 10))
     ax = fig.add_subplot(111)
 
-    ax.plot(gens, fitness_values, label=linelabel, linewidth=2)
+    if num_gens > 1:
+        ax.plot(gens, fitness_values, label=linelabel, linewidth=2)
+    elif num_gens == 1:
+        ax.scatter(1, gens[0])
+
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
