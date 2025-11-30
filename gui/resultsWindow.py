@@ -8,6 +8,8 @@ from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object
 from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation
 from ConsoleRedirect import ConsoleRedirect
 import sys
+from gui.HistoryRecord import HistoryRecord
+import io, base64
 
 #Responsible for rendering and interaction of the GUI. The GUI allows the user to switch between algorithms and view the results in realtime.
 class AlgorithmGUI:
@@ -86,14 +88,48 @@ class AlgorithmGUI:
         self.notebook.add(self.tab2, text="Time Taken")
         self.notebook.add(self.tab3, text="Some Other Metric")
 
-    def embed_chart(self, figure, tab):
-        canvas = FigureCanvasTkAgg(figure, master=tab)
-        widget = canvas.get_tk_widget()
+        self.history:dict[str, HistoryRecord] = {}
 
-        widget.config(width=1300, height=800)
-        widget.pack(fill=tk.BOTH, expand=False)
+        self.initialise_history()
 
-        canvas.draw()
+    def embed_chart(self, b64, tab):
+        for widget in tab.winfo_children():
+            widget.destroy()
+
+        if not b64:
+            return
+        
+        img = tk.PhotoImage(data=b64)
+
+        #Create storage dict on first use
+        if not hasattr(self, "_image_refs"):
+            self._image_refs = {}  # dictionary, not a list
+
+        #Replace any existing reference for this tab
+        self._image_refs[tab] = img
+
+        label = ttk.Label(tab, image=img)
+        label.pack(fill="both", expand=True)
+
+    def update_tab_content(self, selected_algorithm, selected_case):
+        key = f"{selected_algorithm}_{selected_case}"
+
+        if key in self.history:
+            loaded_history = self.history[key]
+            
+            #Console (tab0)
+            self.console_text.delete("1.0", "end")
+            self.notebook.select(self.tab0)
+            print(loaded_history.console_history)
+
+            #Container Visualisation (tab1)
+            self.embed_chart(loaded_history.visualisation_history, self.tab1)
+
+    #Initialises the history by creating an entry for each algorithm_case composite key
+    def initialise_history(self):
+        for algo in self.algorithms:
+            for case in self.test_cases:
+                self.history[f"{algo}_{case}"] = HistoryRecord(f"{algo}_{case} has not been run yet", None)
 
     def on_algorithm_listbox_select(self, event):
         selection = self.algorithms_listbox.curselection()
@@ -133,14 +169,13 @@ class AlgorithmGUI:
 
     def update_plot(self):
         algo_name = self.algorithms[self.current_algorithm_index]
-        self.notebook.select(self.tab0)
+        case_name = self.test_cases[self.current_test_case_index]
 
-        if algo_name not in self.ran_algorithms:
-            self.console_text.delete("1.0", "end")
-            print(f"{algo_name} Algorithm has not been run yet. Please press the Run button")
+        self.update_tab_content(algo_name, case_name)
 
     def run_algorithm(self):
         algo_name = self.algorithms[self.current_algorithm_index]
+        case_name = self.test_cases[self.current_test_case_index]
 
         if algo_name == "Greedy":
             print("===== RUNNING GREEDY ALGORITHM =====")
@@ -162,10 +197,24 @@ class AlgorithmGUI:
             c = Custom_Visualisation()
             fig, ax = c.visualise(cb, self_display=False)
 
-            self.embed_chart(fig, self.tab1)
+            self.embed_chart(self.fig_to_base64(fig), self.tab1)
             
             if "Greedy" not in self.ran_algorithms:
                 self.ran_algorithms.append("Greedy")
+
+        #Set History
+        key = f"{algo_name}_{case_name}"
+
+        self.history[key].console_history = self.console_text.get("1.0", "end")
+        self.history[key].visualisation_history = self.fig_to_base64(fig) #type: ignore
+
+    def fig_to_base64(self, fig):
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches='tight', pad_inches=0) #type: ignore
+        buf.seek(0)
+        b64 = base64.b64encode(buf.read()).decode("ascii")
+
+        return b64
 
 def show_window():
     root = tk.Tk()
