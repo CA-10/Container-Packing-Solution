@@ -1,9 +1,9 @@
-from GA.Member import Member
-from GA.Gene_Cartesian import Gene_Cartesian
+from Algorithms.GA.Member import Member
+from Algorithms.GA.Gene_Cartesian import Gene_Cartesian
 import random
-import Operators.penalty_functions as penalty_functions
-from Vector2 import Vector2
-from Container_Context import Container_Context
+import Algorithms.Operators.penalty_functions as penalty_functions
+from Algorithms.Vector2 import Vector2
+from Algorithms.Container_Context import Container_Context
 import math
 
 class Member_Cartesian(Member):

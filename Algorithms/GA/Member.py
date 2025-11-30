@@ -1,5 +1,5 @@
 from abc import ABC as abstract, abstractmethod
-from Container_Context import Container_Context
+from Algorithms.Container_Context import Container_Context
 
 class Member(abstract):
     def __init__(self, radii: list[float], masses: list[int], container_context: Container_Context, num_genes: int):

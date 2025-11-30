@@ -1,14 +1,24 @@
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
-def draw_fitness_over_gens(fitness_values, title="Fitness Over Generations", xlabel="Generation", ylabel="Fitness", linelabel="Best Fitness"):
+def draw_fitness_over_gens(fitness_values, display=True, title="Fitness Over Generations", xlabel="Generation", ylabel="Fitness", linelabel="Best Fitness"):
+    if not fitness_values:
+        return None
+    
     num_gens = len(fitness_values)
     gens = [i for i in range(num_gens)]
     
-    plt.figure(figsize=(10, 6))
-    plt.plot(gens, fitness_values, label=linelabel, linewidth=2)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    fig = Figure(figsize=(10, 10))
+    ax = fig.add_subplot(111)
+
+    ax.plot(gens, fitness_values, label=linelabel, linewidth=2)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.grid(True, linestyle='--', alpha=0.3)
+    ax.legend()
+
+    if display:
+        plt.show()
+    
+    return fig

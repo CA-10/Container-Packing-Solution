@@ -3,6 +3,7 @@ from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from Algorithms.Algorithm_Greedy import Algorithm_Greedy
+from Algorithms.Algorithm_Random import Algorithm_Random
 from Algorithms.Container_Context import Container_Context
 from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object
 from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation
@@ -10,6 +11,10 @@ from ConsoleRedirect import ConsoleRedirect
 import sys
 from gui.HistoryRecord import HistoryRecord
 import io, base64
+import Algorithms.Operators.penalty_functions as penalty_functions
+from Algorithms.Vector2 import Vector2
+import Algorithms.Visualisation.Results_Graphs as Results_Graphs
+import threading
 
 #Responsible for rendering and interaction of the GUI. The GUI allows the user to switch between algorithms and view the results in realtime.
 class AlgorithmGUI:
@@ -18,7 +23,6 @@ class AlgorithmGUI:
         self.root.title("Algorithms and Results")
         
         self.algorithms = ["Greedy", "Random", "Cartesian GA", "Order-Based GA"]
-        self.ran_algorithms = []
         self.current_algorithm_index = 0
 
         self.test_cases = ["Test Case 1", "Test Case 2", "Test Case 3"]
@@ -54,13 +58,6 @@ class AlgorithmGUI:
         self.run_button = ttk.Button(arrows_frame, text="Run", command=self.run_algorithm)
         self.run_button.pack(side=tk.TOP, padx=5)
 
-        #These are the buttons which allow the user to easily toggle between algorithms.
-        self.prev_button = ttk.Button(arrows_frame, text="← Prev Algorithm", command=self.prev_algorithm)
-        self.prev_button.pack(side=tk.LEFT, padx=5)
-
-        self.next_button = ttk.Button(arrows_frame, text="Next Algorithm →", command=self.next_algorithm)
-        self.next_button.pack(side=tk.LEFT, padx=5)
-
         #This is where the matplotlib results will be embedded.
         right_frame = ttk.Frame(root, padding=10)
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -85,12 +82,17 @@ class AlgorithmGUI:
 
         self.notebook.add(self.tab0, text="Console")
         self.notebook.add(self.tab1, text="Visual Container")
-        self.notebook.add(self.tab2, text="Time Taken")
-        self.notebook.add(self.tab3, text="Some Other Metric")
+        self.notebook.add(self.tab2, text="Fitness Over Gens")
 
         self.history:dict[str, HistoryRecord] = {}
 
         self.initialise_history()
+
+        self.poll_console()
+
+    def poll_console(self):
+        self.console_text.update_idletasks()
+        self.root.after(50, self.poll_console)  #Poll console every 50ms
 
     def embed_chart(self, b64, tab):
         for widget in tab.winfo_children():
@@ -103,7 +105,7 @@ class AlgorithmGUI:
 
         #Create storage dict on first use
         if not hasattr(self, "_image_refs"):
-            self._image_refs = {}  # dictionary, not a list
+            self._image_refs = {}  #dictionary, not a list to avoid memory leaks
 
         #Replace any existing reference for this tab
         self._image_refs[tab] = img
@@ -125,11 +127,14 @@ class AlgorithmGUI:
             #Container Visualisation (tab1)
             self.embed_chart(loaded_history.visualisation_history, self.tab1)
 
+            #Fitnesses over generations (tab2)
+            self.embed_chart(loaded_history.fitness_history, self.tab2)
+
     #Initialises the history by creating an entry for each algorithm_case composite key
     def initialise_history(self):
         for algo in self.algorithms:
             for case in self.test_cases:
-                self.history[f"{algo}_{case}"] = HistoryRecord(f"{algo}_{case} has not been run yet", None)
+                self.history[f"{algo}_{case}"] = HistoryRecord(f"{algo} for {case} has not been run yet", None, None)
 
     def on_algorithm_listbox_select(self, event):
         selection = self.algorithms_listbox.curselection()
@@ -145,28 +150,6 @@ class AlgorithmGUI:
             self.current_test_case_index = selection[0]
             self.update_plot()
 
-    def prev_algorithm(self):
-        if self.current_algorithm_index > 0:
-            self.current_algorithm_index -= 1
-        else:
-            self.current_algorithm_index = len(self.algorithms) - 1
-            
-        self.algorithms_listbox.selection_clear(0, tk.END)
-        self.algorithms_listbox.selection_set(self.current_algorithm_index)
-        self.algorithms_listbox.see(self.current_algorithm_index)
-        self.update_plot()
-
-    def next_algorithm(self):
-        if self.current_algorithm_index < len(self.algorithms) - 1:
-            self.current_algorithm_index += 1
-        else:
-            self.current_algorithm_index = 0
-            
-        self.algorithms_listbox.selection_clear(0, tk.END)
-        self.algorithms_listbox.selection_set(self.current_algorithm_index)
-        self.algorithms_listbox.see(self.current_algorithm_index)
-        self.update_plot()
-
     def update_plot(self):
         algo_name = self.algorithms[self.current_algorithm_index]
         case_name = self.test_cases[self.current_test_case_index]
@@ -174,39 +157,73 @@ class AlgorithmGUI:
         self.update_tab_content(algo_name, case_name)
 
     def run_algorithm(self):
+        thread = threading.Thread(target=self._run_algorithm_worker)
+        thread.daemon = True
+        thread.start()
+
+    def _run_algorithm_worker(self):
         algo_name = self.algorithms[self.current_algorithm_index]
         case_name = self.test_cases[self.current_test_case_index]
+
+        best_fitnesses = []
 
         if algo_name == "Greedy":
             print("===== RUNNING GREEDY ALGORITHM =====")
 
-            c = Container_Context(30, 15)
-            a = Algorithm_Greedy(c, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300])
-            a.run()
+            container = Container_Context(30, 15)
+            algorithm = Algorithm_Greedy(container, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300])
+            algorithm.run()
+            best_fitness = algorithm.calculate_fitness()
 
-            print(f"Overall Fitness: {a.calculate_fitness()}")
+            print(f"Overall Fitness: {best_fitness}")
 
+            vector2pos = []
             pos = []
 
-            for i in a.placed_circles:
+            for i in algorithm.placed_circles:
+                vector2pos.append(Vector2(i[0], i[1]))
                 pos.append((i[0], i[1]))
 
-            com = [0, 0]
-            #com = penalty_functions.calculate_com_penalty(a.placed_circles, a.masses, Vector2(a.container_width / 2, a.container_height / 2))[0]
-            cb = Visualisation_Object(pos, a.radii, a.masses, com, a.container_context.container_width, a.container_context.container_height)
+            com = penalty_functions.calculate_com_penalty(vector2pos, algorithm.masses, Vector2(container.container_width / 2, container.container_height / 2))[0]
+            cb = Visualisation_Object(pos, algorithm.radii, algorithm.masses, [com.x, com.y], algorithm.container_context.container_width, algorithm.container_context.container_height)
             c = Custom_Visualisation()
             fig, ax = c.visualise(cb, self_display=False)
 
-            self.embed_chart(self.fig_to_base64(fig), self.tab1)
-            
-            if "Greedy" not in self.ran_algorithms:
-                self.ran_algorithms.append("Greedy")
+            best_fitnesses = [best_fitness]
+
+        elif algo_name == "Random":
+            print("===== RUNNING RANDOM ALGORITHM =====")
+
+            container = Container_Context(30, 15)
+            algorithm = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], container.container_width, container.container_height, 10000)
+            algorithm.run()
+            best_member = algorithm.best
+            best_fitness = algorithm.best_fitness
+
+            print(f"Overall Fitness: {best_fitness}")
+
+            vector2pos = []
+            pos = []
+
+            for gene in best_member.genome: #type: ignore
+                pos.append([gene.position.x, gene.position.y])
+                vector2pos.append(gene.position)
+
+            com = penalty_functions.calculate_com_penalty(vector2pos, algorithm.masses, Vector2(container.container_width / 2, container.container_height / 2))[0]
+            cb = Visualisation_Object(pos, algorithm.radii, algorithm.masses, [com.x, com.y], algorithm.container_width, algorithm.container_height)
+            c = Custom_Visualisation()
+            fig, ax = c.visualise(cb, self_display=False)
+
+            best_fitnesses = [best_fitness]
 
         #Set History
         key = f"{algo_name}_{case_name}"
 
         self.history[key].console_history = self.console_text.get("1.0", "end")
         self.history[key].visualisation_history = self.fig_to_base64(fig) #type: ignore
+        self.history[key].fitness_history = self.fig_to_base64(Results_Graphs.draw_fitness_over_gens(best_fitnesses, display=False))
+
+        self.update_plot()
 
     def fig_to_base64(self, fig):
         buf = io.BytesIO()
