@@ -61,8 +61,13 @@ class AlgorithmGUI:
         self.run_button = ttk.Button(arrows_frame, text="Run", command=self.run_algorithm)
         self.run_button.pack(side=tk.TOP, padx=5)
 
-        self.run_all_button = ttk.Button(arrows_frame, text="Run All For Test Case", command=self.run_all)
+        self.run_all_button = ttk.Button(arrows_frame, text="Run All For SELECTED Test Case", command=self.run_all)
         self.run_all_button.pack(side=tk.TOP, padx=5, pady=10)
+
+        self.run_all_all_button = ttk.Button(arrows_frame, text="Run All For ALL Test Cases", command=self.run_all_all)
+        self.run_all_all_button.pack(side=tk.TOP, padx=5, pady=20)
+        note_label = ttk.Label(arrows_frame, text="NOTE: This may take some time", foreground="red")
+        note_label.pack(side=tk.TOP, padx=5, pady=0)
 
         #This is where the matplotlib results will be embedded.
         right_frame = ttk.Frame(root, padding=10)
@@ -190,6 +195,11 @@ class AlgorithmGUI:
 
     def run_all(self):
         thread = threading.Thread(target=self._run_all_worker)
+        thread.daemon = True
+        thread.start()
+    
+    def run_all_all(self):
+        thread = threading.Thread(target=self._run_all_all_worker)
         thread.daemon = True
         thread.start()
         
@@ -335,6 +345,25 @@ class AlgorithmGUI:
             self.algorithms_listbox.see(self.current_algorithm_index)
 
             self.run_and_eval_algo(self.algorithms[self.current_algorithm_index], case_name)
+
+    def _run_all_all_worker(self):
+        for j in range(len(self.test_cases)):
+            self.current_test_case_index = j
+
+            self.test_cases_listbox.selection_clear(0, tk.END)
+            self.test_cases_listbox.selection_set(self.current_test_case_index)
+            self.test_cases_listbox.see(self.current_test_case_index)
+
+            case_name = self.test_cases[self.current_test_case_index]
+
+            for i in range(len(self.algorithms)):
+                self.current_algorithm_index = i
+
+                self.algorithms_listbox.selection_clear(0, tk.END)
+                self.algorithms_listbox.selection_set(self.current_algorithm_index)
+                self.algorithms_listbox.see(self.current_algorithm_index)
+
+                self.run_and_eval_algo(self.algorithms[self.current_algorithm_index], case_name)
 
     def fig_to_base64(self, fig):
         buf = io.BytesIO()
