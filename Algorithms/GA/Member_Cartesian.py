@@ -30,7 +30,7 @@ class Member_Cartesian(Member):
         p3 = penalty_functions.calculate_com_penalty(positions, masses, Vector2(self.container_context.container_width / 2, self.container_context.container_height / 2))[1]
         p4 = penalty_functions.calculate_packing_fitness(positions, radii)
 
-        penalty = (15.0 * p1) + (10.0 * p2) + (0.5 * p3) + (1.6 * p4)
+        penalty = (15.0 * p1) + (10.0 * p2) + (5.0 * p3) + (1.6 * p4)
         #fitness = math.exp(-0.001 * penalty)
         fitness = -penalty
 

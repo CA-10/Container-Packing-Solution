@@ -1,7 +1,7 @@
-from GA.Member_Cartesian import Member_Cartesian
-from Container_Context import Container_Context
-import GA.crossover_functions as crossover_functions
-from GA.Gene_Cartesian import Gene_Cartesian
+from Algorithms.GA.Member_Cartesian import Member_Cartesian
+from Algorithms.Container_Context import Container_Context
+import Algorithms.GA.crossover_functions as crossover_functions
+from Algorithms.GA.Gene_Cartesian import Gene_Cartesian
 import random
 
 class Population_Cartesian:

@@ -1,6 +1,6 @@
-from GA.Gene import Gene
+from Algorithms.GA.Gene import Gene
 import random
-from Vector2 import Vector2
+from Algorithms.Vector2 import Vector2
 
 class Gene_OrderBased(Gene):
     def __init__(self, order: int, radius: float, mass: int):
