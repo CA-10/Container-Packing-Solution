@@ -18,7 +18,25 @@ class Custom_Visualisation(Visualisation_Base):
             edgecolor='black',
             linewidth=2
         )
+
+        centre = (visualisation_object.container_width / 2, visualisation_object.container_height / 2)
+
+        safety_zone_width = 0.6 * visualisation_object.container_width
+        safety_zone_height = 0.6 * visualisation_object.container_height
+
+        safety_zone = plt.Rectangle( #type: ignore
+            (centre[0] - safety_zone_width / 2, centre[1] - safety_zone_height / 2),  # bottom-left corner
+            safety_zone_width,
+            safety_zone_height,
+            fill=True,
+            color=(0.43, 1, 0.49, 0.3),
+            edgecolor='green',
+            linewidth=2,
+            linestyle='--'
+        )
+
         ax.add_patch(container)
+        ax.add_patch(safety_zone)
 
         for (x, y), r in zip(visualisation_object.circles, visualisation_object.radii):
             circle = Circle((x, y), r, fill=True, alpha=0.5, edgecolor='blue', facecolor='skyblue')
