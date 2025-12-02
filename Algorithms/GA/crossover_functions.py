@@ -1,5 +1,5 @@
 import random
-from Vector2 import Vector2
+from Algorithms.Vector2 import Vector2
 
 def blended_crossover(parent_a_positions: list[Vector2], parent_b_positions: list[Vector2], alpha: float) -> tuple[list[Vector2], list[Vector2]]:
     """

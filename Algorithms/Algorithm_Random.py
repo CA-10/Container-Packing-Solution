@@ -1,7 +1,5 @@
 from Algorithms.AlgorithmBase import AlgorithmBase as AB
 from Algorithms.GA.Member_Cartesian import Member_Cartesian
-from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation
-from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object
 import time
 from Algorithms.Container_Context import Container_Context
 import math
@@ -55,27 +53,3 @@ class Algorithm_Random(AB):
         self.fitness = self.best_fitness
         
         self.print_stats()
-        
-
-if __name__ == "__main__":
-    #====TODO Remove, this is just testing code.====
-    a = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], 20, 15, 10000)
-
-    a.run()
-
-
-    best_member = a.best
-
-    positions = []
-    vector2positions = []
-
-    for gene in best_member.genome: #type: ignore
-        positions.append([gene.position.x, gene.position.y])
-        vector2positions.append(gene.position)
-
-    #com = calculate_com_penalty(best_member.genome, a.masses, [a.container_width / 2, a.container_height / 2])[0]
-    com = [0, 0]
-    cb = Visualisation_Object(positions, a.radii, a.masses, com, a.container_width, a.container_height)
-
-    c = Custom_Visualisation()
-    c.visualise(cb)

@@ -1,10 +1,10 @@
-from GA.Member_OrderBased import Member_OrderBased
-from Container_Context import Container_Context
-import GA.crossover_functions as crossover_functions
-from GA.Gene_OrderBased import Gene_OrderBased
+from Algorithms.GA.Member_OrderBased import Member_OrderBased
+from Algorithms.Container_Context import Container_Context
+import Algorithms.GA.crossover_functions as crossover_functions
+from Algorithms.GA.Gene_OrderBased import Gene_OrderBased
 import random
-import Operators.placement_functions as placement_functions
-from Vector2 import Vector2
+import Algorithms.Operators.placement_functions as placement_functions
+from Algorithms.Vector2 import Vector2
 
 class Population_OrderBased:
     def __init__(self, population_size: int, container_context: Container_Context, radii: list[float], masses: list[int]):

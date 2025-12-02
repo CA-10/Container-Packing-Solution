@@ -1,13 +1,15 @@
 import tkinter as tk
+from tkinter import font
 from tkinter import ttk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from Algorithms.Algorithm_Greedy import Algorithm_Greedy
 from Algorithms.Algorithm_Random import Algorithm_Random
+from Algorithms.Algorithm_GA import Algorithm_GA
+from Algorithms.Algorithm_Hybrid import Algorithm_Hybrid
 from Algorithms.Container_Context import Container_Context
 from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object
 from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation
-from ConsoleRedirect import ConsoleRedirect
 import sys
 from gui.HistoryRecord import HistoryRecord
 import io, base64
@@ -15,6 +17,7 @@ import Algorithms.Operators.penalty_functions as penalty_functions
 from Algorithms.Vector2 import Vector2
 import Algorithms.Visualisation.Results_Graphs as Results_Graphs
 import threading
+import test_cases as tests
 
 #Responsible for rendering and interaction of the GUI. The GUI allows the user to switch between algorithms and view the results in realtime.
 class AlgorithmGUI:
@@ -25,7 +28,7 @@ class AlgorithmGUI:
         self.algorithms = ["Greedy", "Random", "Cartesian GA", "Order-Based GA"]
         self.current_algorithm_index = 0
 
-        self.test_cases = ["Test Case 1", "Test Case 2", "Test Case 3"]
+        self.test_cases = [k for k in tests.test_cases.keys()]
         self.current_test_case_index = 0
 
         left_frame = ttk.Frame(root, padding=10)
@@ -58,6 +61,9 @@ class AlgorithmGUI:
         self.run_button = ttk.Button(arrows_frame, text="Run", command=self.run_algorithm)
         self.run_button.pack(side=tk.TOP, padx=5)
 
+        self.run_all_button = ttk.Button(arrows_frame, text="Run All For Test Case", command=self.run_all)
+        self.run_all_button.pack(side=tk.TOP, padx=5, pady=10)
+
         #This is where the matplotlib results will be embedded.
         right_frame = ttk.Frame(root, padding=10)
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -73,15 +79,12 @@ class AlgorithmGUI:
         self.tab3 = ttk.Frame(self.notebook)
 
         #Setup the console to tab0
-        self.console_text = tk.Text(self.tab0, wrap="word", height=20,)
+        my_font = font.Font(family="Courier New", size=16)
+        self.console_text = tk.Text(self.tab0, wrap="word", height=20, font=my_font)
         self.console_text.pack(fill="both", expand=True)
         self.console_text.config(state=tk.DISABLED)
 
-        #Redirect stdout to use the tab0 console
-        sys.stdout = ConsoleRedirect(self.console_text)
-        sys.stderr = ConsoleRedirect(self.console_text)
-
-        self.notebook.add(self.tab0, text="Console")
+        self.notebook.add(self.tab0, text="Stats")
         self.notebook.add(self.tab1, text="Visual Container")
         self.notebook.add(self.tab2, text="Fitness Over Gens")
 
@@ -89,30 +92,55 @@ class AlgorithmGUI:
 
         self.initialise_history()
 
-        self.poll_console()
-
-    def poll_console(self):
-        self.console_text.update_idletasks()
-        self.root.after(10, self.poll_console)  #Poll console every 10ms
+    def insert_text(self, text):
+        self.console_text.config(state=tk.NORMAL)
+        self.console_text.delete("1.0", "end")
+        self.console_text.insert("1.0", text)
+        self.console_text.config(state=tk.DISABLED)
 
     def embed_chart(self, b64, tab):
+        # Clear previous widgets
         for widget in tab.winfo_children():
             widget.destroy()
 
         if not b64:
             return
-        
+
+        # Create storage dict on first use
+        if not hasattr(self, "_image_refs"):
+            self._image_refs = {}
+
+        # Convert base64 to PhotoImage
         img = tk.PhotoImage(data=b64)
 
-        #Create storage dict on first use
-        if not hasattr(self, "_image_refs"):
-            self._image_refs = {}  #dictionary, not a list to avoid memory leaks
-
-        #Replace any existing reference for this tab
+        # Keep a reference to avoid garbage collection
         self._image_refs[tab] = img
 
-        label = ttk.Label(tab, image=img)
-        label.pack(fill="both", expand=True)
+        # Create a canvas to hold the image
+        canvas = tk.Canvas(tab)
+        canvas.pack(fill="both", expand=True, side="left")
+
+        # Add scrollbars
+        v_scroll = ttk.Scrollbar(tab, orient="vertical", command=canvas.yview)
+        v_scroll.pack(fill="y", side="right")
+        h_scroll = ttk.Scrollbar(tab, orient="horizontal", command=canvas.xview)
+        h_scroll.pack(fill="x", side="bottom")
+
+        canvas.configure(yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set)
+
+        # Create an inner frame to hold the label
+        frame = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=frame, anchor="nw")
+
+        # Add the image to the frame
+        label = ttk.Label(frame, image=img)
+        label.pack()
+
+        # Update scroll region whenever size changes
+        def on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame.bind("<Configure>", on_frame_configure)
 
     def update_tab_content(self, selected_algorithm, selected_case):
         key = f"{selected_algorithm}_{selected_case}"
@@ -121,9 +149,7 @@ class AlgorithmGUI:
             loaded_history = self.history[key]
             
             #Console (tab0)
-            self.console_text.delete("1.0", "end")
-            self.notebook.select(self.tab0)
-            print(loaded_history.console_history)
+            self.insert_text(loaded_history.console_history)
 
             #Container Visualisation (tab1)
             self.embed_chart(loaded_history.visualisation_history, self.tab1)
@@ -162,17 +188,27 @@ class AlgorithmGUI:
         thread.daemon = True
         thread.start()
 
-    def _run_algorithm_worker(self):
-        algo_name = self.algorithms[self.current_algorithm_index]
-        case_name = self.test_cases[self.current_test_case_index]
-
+    def run_all(self):
+        thread = threading.Thread(target=self._run_all_worker)
+        thread.daemon = True
+        thread.start()
+        
+    def run_and_eval_algo(self, algo_name, case_name):
         best_fitnesses = []
+        test_case = tests.test_cases[case_name]
+
+        if not test_case:
+            return
+
+        #Show the stats tab when running
+        self.notebook.select(self.tab0)
 
         if algo_name == "Greedy":
             print("===== RUNNING GREEDY ALGORITHM =====")
+            self.insert_text("RUNNING GREEDY ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
 
-            container = Container_Context(30, 15)
-            algorithm = Algorithm_Greedy(container, [2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300])
+            container = Container_Context(test_case.container_width, test_case.container_height)
+            algorithm = Algorithm_Greedy(container, test_case.radii, test_case.masses)
             algorithm.run()
             best_fitness = algorithm.calculate_fitness()
 
@@ -194,9 +230,10 @@ class AlgorithmGUI:
 
         elif algo_name == "Random":
             print("===== RUNNING RANDOM ALGORITHM =====")
+            self.insert_text("RUNNING RANDOM ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
 
-            container = Container_Context(30, 15)
-            algorithm = Algorithm_Random([2.0, 2.0, 1.5, 1.5, 1.2, 2.0, 1.5, 2.0, 1.5, 2.0, 1.2, 1.2, 1.2, 1.2], [2500, 2500, 800, 800, 300, 2500, 800, 2500, 800, 2500, 300, 300, 300, 300], container.container_width, container.container_height, 10000)
+            container = Container_Context(test_case.container_width, test_case.container_height)
+            algorithm = Algorithm_Random(test_case.radii, test_case.masses, container.container_width, container.container_height, 1000)
             algorithm.run()
             best_member = algorithm.best
             best_fitness = algorithm.best_fitness
@@ -217,14 +254,87 @@ class AlgorithmGUI:
 
             best_fitnesses = [best_fitness]
 
+        elif algo_name == "Cartesian GA":
+            print("===== RUNNING CARTESIAN GA ALGORITHM =====")
+            self.insert_text("RUNNING CARTESIAN GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+
+            container = Container_Context(test_case.container_width, test_case.container_height)
+            algorithm = Algorithm_GA(1000, 500, 0.03, container.container_width, container.container_height, test_case.radii, test_case.masses, "tournament", 8)
+            algorithm.run()
+
+            best_member = algorithm.population.population[algorithm.population.fitnesses.index(max(algorithm.population.fitnesses))].genome
+
+            positions = []
+            vector2positions = []
+
+            for gene in best_member:
+                positions.append([gene.position.x, gene.position.y])
+                vector2positions.append(gene.position)
+
+            com = penalty_functions.calculate_com_penalty(vector2positions, algorithm.masses, Vector2(container.container_width / 2, container.container_height / 2))[0]
+            cb = Visualisation_Object(positions, algorithm.radii, algorithm.masses, [com.x, com.y], algorithm.container_width, algorithm.container_height)
+            c = Custom_Visualisation()
+            fig, ax = c.visualise(cb, self_display=False)
+            best_fitnesses = list(algorithm.best_fitnesses)
+
+        elif algo_name == "Order-Based GA":
+            print("===== RUNNING ORDER-BASED GA ALGORITHM =====")
+            self.insert_text("RUNNING ORDER-BASED GA GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+
+            container = Container_Context(test_case.container_width, test_case.container_height)
+            algorithm = Algorithm_Hybrid(300, 100, 0.03, container.container_width, container.container_height, test_case.radii, test_case.masses, "tournament", 8)
+            algorithm.run()
+
+            best_member = algorithm.population.population[algorithm.population.fitnesses.index(max(algorithm.population.fitnesses))].genome
+
+            positions = []
+            vector2positions = []
+
+            for gene in best_member:
+                positions.append([gene.position.x, gene.position.y])
+                vector2positions.append(gene.position)
+
+            com = penalty_functions.calculate_com_penalty(vector2positions, algorithm.masses, Vector2(container.container_width / 2, container.container_height / 2))[0]
+            cb = Visualisation_Object(positions, algorithm.radii, algorithm.masses, [com.x, com.y], algorithm.container_width, algorithm.container_height)
+            c = Custom_Visualisation()
+            fig, ax = c.visualise(cb, self_display=False)
+            best_fitnesses = list(algorithm.best_fitnesses)
+
+        stats = algorithm.print_stats() #type: ignore
+
+        stats_text = (
+            f"====={algo_name.upper()} ALGORITHM STATS=====\n"
+            f"Runtime Seconds (s): {stats[0]}\n"
+            f"Total Iterations/Generations: {stats[1]}\n"
+            f"Fitness: {stats[2]}\n"
+        )
+
         #Set History
         key = f"{algo_name}_{case_name}"
 
-        self.history[key].console_history = self.console_text.get("1.0", "end")
+        self.history[key].console_history = stats_text
         self.history[key].visualisation_history = self.fig_to_base64(fig) #type: ignore
         self.history[key].fitness_history = self.fig_to_base64(Results_Graphs.draw_fitness_over_gens(best_fitnesses, display=False))
 
         self.update_plot()
+
+    def _run_algorithm_worker(self):
+        algo_name = self.algorithms[self.current_algorithm_index]
+        case_name = self.test_cases[self.current_test_case_index]
+
+        self.run_and_eval_algo(algo_name, case_name)
+
+    def _run_all_worker(self):
+        case_name = self.test_cases[self.current_test_case_index]
+
+        for i in range(len(self.algorithms)):
+            self.current_algorithm_index = i
+
+            self.algorithms_listbox.selection_clear(0, tk.END)
+            self.algorithms_listbox.selection_set(self.current_algorithm_index)
+            self.algorithms_listbox.see(self.current_algorithm_index)
+
+            self.run_and_eval_algo(self.algorithms[self.current_algorithm_index], case_name)
 
     def fig_to_base64(self, fig):
         buf = io.BytesIO()

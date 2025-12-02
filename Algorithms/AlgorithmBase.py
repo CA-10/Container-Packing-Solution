@@ -19,3 +19,5 @@ class AlgorithmBase(ABC):
         print(f"Runtime (s): {self.runtime_seconds}")
         print(f"Total Iterations/Generations: {self.num_iterations_or_generations}")
         print(f"Fitness: {self.fitness}")
+
+        return self.runtime_seconds, self.num_iterations_or_generations, self.fitness
