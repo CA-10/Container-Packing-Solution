@@ -25,7 +25,7 @@ class AlgorithmGUI:
         self.root = root
         self.root.title("Algorithms and Results")
         
-        self.algorithms = ["Greedy", "Random", "Cartesian GA", "Order-Based GA"]
+        self.algorithms = ["Greedy", "Cartesian GA", "Order-Based GA", "Random"]
         self.current_algorithm_index = 0
 
         self.test_cases = [k for k in tests.test_cases.keys()]
@@ -82,26 +82,43 @@ class AlgorithmGUI:
         self.tab1 = ttk.Frame(self.notebook)
         self.tab2 = ttk.Frame(self.notebook)
         self.tab3 = ttk.Frame(self.notebook)
+        self.tab4 = ttk.Frame(self.notebook)
 
-        #Setup the console to tab0
-        my_font = font.Font(family="Courier New", size=16)
-        self.console_text = tk.Text(self.tab0, wrap="word", height=20, font=my_font)
-        self.console_text.pack(fill="both", expand=True)
-        self.console_text.config(state=tk.DISABLED)
+        console_font = font.Font(family="Courier New", size=16)
+
+        self.stats_text = tk.Text(self.tab0, wrap="word", height=20, font=console_font)
+        self.stats_text.pack(fill="both", expand=True)
+        self.stats_text.config(state=tk.DISABLED)
+
+        self.params_text = tk.Text(self.tab3, wrap="word", height=20, font=console_font)
+        self.params_text.pack(fill="both", expand=True)
 
         self.notebook.add(self.tab0, text="Stats")
         self.notebook.add(self.tab1, text="Visual Container")
         self.notebook.add(self.tab2, text="Fitness Over Gens")
+        self.notebook.add(self.tab3, text="Params")
 
         self.history:dict[str, HistoryRecord] = {}
 
+        self.params:dict[str, str] = {
+            "Greedy": "None",
+            "Random": "num_iterations=1000",
+            "Cartesian GA": "max_gens=1000\npopulation_size=500\nmutation_rate=0.03\nselection=tournament\ntournament_size=8",
+            "Order-Based GA": "max_gens=300\npopulation_size=100\nmutation_rate=0.03\nselection=tournament\ntournament_size=8"
+        }
+
+        self.bind_params_updates()
         self.initialise_history()
 
-    def insert_text(self, text):
-        self.console_text.config(state=tk.NORMAL)
-        self.console_text.delete("1.0", "end")
-        self.console_text.insert("1.0", text)
-        self.console_text.config(state=tk.DISABLED)
+        self.update_plot()
+
+    def insert_text(self, text, text_field, disable=True):
+        text_field.config(state=tk.NORMAL)
+        text_field.delete("1.0", "end")
+        text_field.insert("1.0", text)
+
+        if disable:
+            self.stats_text.config(state=tk.DISABLED)
 
     def embed_chart(self, b64, tab):
         # Clear previous widgets
@@ -147,14 +164,32 @@ class AlgorithmGUI:
 
         frame.bind("<Configure>", on_frame_configure)
 
+    def bind_params_updates(self):
+        self.params_text.bind("<<Modified>>", self.on_params_modified)
+
+    def on_params_modified(self, event=None):
+        #Reset the modified flag so the event can fire again
+        self.params_text.edit_modified(False)
+
+        #Read the entire text
+        raw_text = self.params_text.get("1.0", "end").strip()
+
+        self.params[self.algorithms[self.current_algorithm_index]] = raw_text
+
     def update_tab_content(self, selected_algorithm, selected_case):
         key = f"{selected_algorithm}_{selected_case}"
+
+        if selected_algorithm in self.params:
+            loaded_params = self.params[selected_algorithm]
+
+            #Params (tab3)
+            self.insert_text(loaded_params, self.params_text, disable=False)
 
         if key in self.history:
             loaded_history = self.history[key]
             
-            #Console (tab0)
-            self.insert_text(loaded_history.console_history)
+            #Stats (tab0)
+            self.insert_text(loaded_history.console_history, self.stats_text)
 
             #Container Visualisation (tab1)
             self.embed_chart(loaded_history.visualisation_history, self.tab1)
@@ -215,7 +250,7 @@ class AlgorithmGUI:
 
         if algo_name == "Greedy":
             print("===== RUNNING GREEDY ALGORITHM =====")
-            self.insert_text("RUNNING GREEDY ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+            self.insert_text("RUNNING GREEDY ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES", self.stats_text)
 
             container = Container_Context(test_case.container_width, test_case.container_height)
             algorithm = Algorithm_Greedy(container, test_case.radii, test_case.masses)
@@ -240,10 +275,17 @@ class AlgorithmGUI:
 
         elif algo_name == "Random":
             print("===== RUNNING RANDOM ALGORITHM =====")
-            self.insert_text("RUNNING RANDOM ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+            self.insert_text("RUNNING RANDOM ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES", self.stats_text)
+
+            params = self.get_params(algo_name)
+
+            if params != None:
+                num_iterations = int(params["num_iterations"])
+            else:
+                num_iterations = 1000 #Default value is 1000
 
             container = Container_Context(test_case.container_width, test_case.container_height)
-            algorithm = Algorithm_Random(test_case.radii, test_case.masses, container.container_width, container.container_height, 1000)
+            algorithm = Algorithm_Random(test_case.radii, test_case.masses, container.container_width, container.container_height, num_iterations)
             algorithm.run()
             best_member = algorithm.best
             best_fitness = algorithm.best_fitness
@@ -266,10 +308,25 @@ class AlgorithmGUI:
 
         elif algo_name == "Cartesian GA":
             print("===== RUNNING CARTESIAN GA ALGORITHM =====")
-            self.insert_text("RUNNING CARTESIAN GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+            self.insert_text("RUNNING CARTESIAN GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES", self.stats_text)
+
+            params = self.get_params(algo_name)
+
+            if params != None:
+                max_generations = int(params["max_gens"])
+                population_size = int(params["population_size"])
+                mutation_rate = float(params["mutation_rate"])
+                selection = str(params["selection"])
+                tournament_size = int(params["tournament_size"])
+            else:
+                max_generations = 1000
+                population_size = 500
+                mutation_rate = 0.03
+                selection = "tournament"
+                tournament_size = 8
 
             container = Container_Context(test_case.container_width, test_case.container_height)
-            algorithm = Algorithm_GA(1000, 500, 0.03, container.container_width, container.container_height, test_case.radii, test_case.masses, "tournament", 8)
+            algorithm = Algorithm_GA(max_generations, population_size, mutation_rate, container.container_width, container.container_height, test_case.radii, test_case.masses, selection, tournament_size)
             algorithm.run()
 
             best_member = algorithm.population.population[algorithm.population.fitnesses.index(max(algorithm.population.fitnesses))].genome
@@ -289,10 +346,25 @@ class AlgorithmGUI:
 
         elif algo_name == "Order-Based GA":
             print("===== RUNNING ORDER-BASED GA ALGORITHM =====")
-            self.insert_text("RUNNING ORDER-BASED GA GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES")
+            self.insert_text("RUNNING ORDER-BASED GA GA ALGORITHM. PLEASE CHECK CONSOLE FOR UPDATES", self.stats_text)
+
+            params = self.get_params(algo_name)
+
+            if params != None:
+                max_generations = int(params["max_gens"])
+                population_size = int(params["population_size"])
+                mutation_rate = float(params["mutation_rate"])
+                selection = str(params["selection"])
+                tournament_size = int(params["tournament_size"])
+            else:
+                max_generations = 1000
+                population_size = 500
+                mutation_rate = 0.03
+                selection = "tournament"
+                tournament_size = 8
 
             container = Container_Context(test_case.container_width, test_case.container_height)
-            algorithm = Algorithm_Hybrid(300, 100, 0.03, container.container_width, container.container_height, test_case.radii, test_case.masses, "tournament", 8)
+            algorithm = Algorithm_Hybrid(max_generations, population_size, mutation_rate, container.container_width, container.container_height, test_case.radii, test_case.masses, selection, tournament_size)
             algorithm.run()
 
             best_member = algorithm.population.population[algorithm.population.fitnesses.index(max(algorithm.population.fitnesses))].genome
@@ -372,6 +444,25 @@ class AlgorithmGUI:
         b64 = base64.b64encode(buf.read()).decode("ascii")
 
         return b64
+    
+    def get_params(self, algo_name):
+        if algo_name not in self.params:
+            return
+        
+        try:
+            params = self.params[algo_name]
+            params_split = params.split("\n")
+
+            params_dict = {}
+
+            for param in params_split:
+                key = param.split("=")[0]
+                value = param.split("=")[1]
+                params_dict[key] = value
+                
+            return params_dict
+        except:
+            return None
 
 def show_window():
     root = tk.Tk()
