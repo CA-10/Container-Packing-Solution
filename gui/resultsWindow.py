@@ -83,6 +83,7 @@ class AlgorithmGUI:
         self.tab2 = ttk.Frame(self.notebook)
         self.tab3 = ttk.Frame(self.notebook)
         self.tab4 = ttk.Frame(self.notebook)
+        self.tab5 = ttk.Frame(self.notebook)
 
         console_font = font.Font(family="Courier New", size=16)
 
@@ -98,6 +99,15 @@ class AlgorithmGUI:
         self.notebook.add(self.tab2, text="Fitness Over Gens")
         self.notebook.add(self.tab3, text="Params")
 
+        self.spacer = ttk.Frame(self.notebook, width=50)
+        self.notebook.add(self.spacer, text="")
+        self.notebook.tab(self.spacer, state="disabled")
+
+        self.notebook.add(self.tab4, text="COMPARISON: Fitness")
+        self.notebook.add(self.tab5, text="COMPARISON: Times")
+
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_changed)
+
         self.history:dict[str, HistoryRecord] = {}
 
         self.params:dict[str, str] = {
@@ -107,10 +117,25 @@ class AlgorithmGUI:
             "Order-Based GA": "max_gens=300\npopulation_size=100\nmutation_rate=0.03\nselection=tournament\ntournament_size=8"
         }
 
+        #List of dicts, one for each test case, with the same keys in each dict
+        self.latest_algorithms_fitnesses:list[dict[str, float]] = []
+        self.latest_algorithms_times:list[dict[str, float]] = []
+
         self.bind_params_updates()
         self.initialise_history()
+        self.initialise_comparison_results()
 
         self.update_plot()
+
+    def initialise_comparison_results(self):
+        for _ in self.test_cases:
+            case_dict = {}
+            
+            for algo in self.algorithms:
+                case_dict[algo] = 0.0
+
+            self.latest_algorithms_fitnesses.append(dict(case_dict))
+            self.latest_algorithms_times.append(dict(case_dict))
 
     def insert_text(self, text, text_field, disable=True):
         text_field.config(state=tk.NORMAL)
@@ -163,6 +188,21 @@ class AlgorithmGUI:
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         frame.bind("<Configure>", on_frame_configure)
+
+    def on_tab_changed(self, event):
+        selected = event.widget.select()
+        tab = event.widget.nametowidget(selected)
+
+        if tab is self.tab4:
+            #Create and render the fitnesses comparison chart
+            fig = Results_Graphs.draw_comparison_bars(self.test_cases, self.latest_algorithms_fitnesses)
+            b64 = self.fig_to_base64(fig)
+            self.embed_chart(b64, self.tab4)
+        elif tab is self.tab5:
+            #Create and render the times comparison chart
+            fig = Results_Graphs.draw_comparison_bars(self.test_cases, self.latest_algorithms_times, title="Runtimes Comparison", ylabel="Runtime (s)")
+            b64 = self.fig_to_base64(fig)
+            self.embed_chart(b64, self.tab5)
 
     def bind_params_updates(self):
         self.params_text.bind("<<Modified>>", self.on_params_modified)
@@ -247,6 +287,10 @@ class AlgorithmGUI:
 
         #Show the stats tab when running
         self.notebook.select(self.tab0)
+
+        #Disable the selects to prevent switching during running
+        self.algorithms_listbox.config(state=tk.DISABLED)
+        self.test_cases_listbox.config(state=tk.DISABLED)
 
         if algo_name == "Greedy":
             print("===== RUNNING GREEDY ALGORITHM =====")
@@ -397,6 +441,14 @@ class AlgorithmGUI:
         self.history[key].console_history = stats_text
         self.history[key].visualisation_history = self.fig_to_base64(fig) #type: ignore
         self.history[key].fitness_history = self.fig_to_base64(Results_Graphs.draw_fitness_over_gens(best_fitnesses, display=False))
+
+        #Update Comparison Results
+        self.latest_algorithms_fitnesses[self.current_test_case_index][algo_name] = max(best_fitnesses)
+        self.latest_algorithms_times[self.current_test_case_index][algo_name] = stats[0]
+
+        #Re-enable the selects to prevent switching during running
+        self.algorithms_listbox.config(state=tk.NORMAL)
+        self.test_cases_listbox.config(state=tk.NORMAL)
 
         self.update_plot()
 
