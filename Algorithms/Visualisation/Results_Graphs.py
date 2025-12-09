@@ -42,7 +42,7 @@ def draw_comparison_bars(case_names, values_algorithms, title="Fitness Compariso
     ax = fig.add_subplot(111)
 
     for case_idx, case_name in enumerate(case_names):
-        values = [abs(values_algorithms[case_idx][alg]) for alg in algorithms]
+        values = [values_algorithms[case_idx][alg] for alg in algorithms]
 
         bar_positions = [x + case_idx * bar_width for x in x_positions]
 
@@ -58,5 +58,49 @@ def draw_comparison_bars(case_names, values_algorithms, title="Fitness Compariso
     ax.set_ylabel(ylabel)
     ax.legend()
     fig.tight_layout()
+
+    return fig
+
+import matplotlib.pyplot as plt
+
+def draw_comparison_plot(case_names, values_algorithms,
+                         title="Convergence Comparison",
+                         xlabel="Algorithms",
+                         ylabel="abs(Fitness)"):
+
+    num_cases = len(case_names)
+
+    # Create figure with one subplot per case
+    fig, axes = plt.subplots(num_cases, 1, figsize=(10, 4 * num_cases), squeeze=False)
+    axes = axes.flatten()
+
+    # Gather a unique consistent color for each algorithm name
+    # from all cases
+    all_algo_names = set()
+    for case_dict in values_algorithms:
+        all_algo_names.update(case_dict.keys())
+    all_algo_names = sorted(all_algo_names)
+
+    # Create a consistent color cycle
+    color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    color_map = {algo: color_cycle[i % len(color_cycle)]
+                 for i, algo in enumerate(all_algo_names)}
+
+    # Draw each case
+    for idx, (case_name, algo_dict) in enumerate(zip(case_names, values_algorithms)):
+        ax = axes[idx]
+        for algo_name, fitness_list in algo_dict.items():
+            ax.plot(fitness_list,
+                    label=algo_name,
+                    color=color_map.get(algo_name))
+
+        ax.set_title(case_name)
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
+        ax.grid(True)
+        ax.legend()
+
+    fig.suptitle(title)
+    fig.tight_layout(rect=[0, 0, 1, 0.97]) # type: ignore
 
     return fig

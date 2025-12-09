@@ -401,8 +401,8 @@ class AlgorithmGUI:
                 selection = str(params["selection"])
                 tournament_size = int(params["tournament_size"])
             else:
-                max_generations = 1000
-                population_size = 500
+                max_generations = 100
+                population_size = 300
                 mutation_rate = 0.03
                 selection = "tournament"
                 tournament_size = 8
@@ -443,7 +443,7 @@ class AlgorithmGUI:
         self.history[key].fitness_history = self.fig_to_base64(Results_Graphs.draw_fitness_over_gens(best_fitnesses, display=False))
 
         #Update Comparison Results
-        self.latest_algorithms_fitnesses[self.current_test_case_index][algo_name] = max(best_fitnesses)
+        self.latest_algorithms_fitnesses[self.current_test_case_index][algo_name] = abs(max(best_fitnesses))
         self.latest_algorithms_times[self.current_test_case_index][algo_name] = stats[0]
 
         #Re-enable the selects to prevent switching during running
