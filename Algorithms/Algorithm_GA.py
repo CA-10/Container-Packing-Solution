@@ -1,9 +1,5 @@
-import random
 from Algorithms.AlgorithmBase import AlgorithmBase as AB
 from Algorithms.GA.Population_Cartesian import Population_Cartesian
-from Algorithms.Visualisation.Custom_Visualisation import Custom_Visualisation #TODO REMOVE
-from Algorithms.Visualisation.Visualisation_Object import Visualisation_Object #TODO REMOVE
-import Algorithms.Visualisation.Results_Graphs as Results_Graphs #TODO REMOVE
 import time
 from Algorithms.Operators.penalty_functions import *
 from Algorithms.Container_Context import Container_Context
